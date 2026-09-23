@@ -1,29 +1,34 @@
 import type { Metadata } from "next";
-import { Fraunces, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
 // =============================================================================
-// FONTS — Loaded via next/font for zero layout shift
+// FONTS — Self-hosted (committed woff2) via next/font/local so production
+// builds never depend on fetching Google Fonts at build time.
 // =============================================================================
 
-const fraunces = Fraunces({
-  subsets: ["latin"],
+const fraunces = localFont({
+  src: "./fonts/fraunces-variable.woff2",
   display: "swap",
+  weight: "100 900",
+  style: "normal",
   variable: "--font-display",
-  axes: ["opsz"],
 });
 
-const ibmPlexSans = IBM_Plex_Sans({
-  subsets: ["latin"],
+const ibmPlexSans = localFont({
+  src: "./fonts/ibm-plex-sans-variable.woff2",
   display: "swap",
-  weight: ["300", "400", "500", "600"],
+  weight: "100 700",
+  style: "normal",
   variable: "--font-body",
 });
 
-const ibmPlexMono = IBM_Plex_Mono({
-  subsets: ["latin"],
+const ibmPlexMono = localFont({
+  src: [
+    { path: "./fonts/ibm-plex-mono-400.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/ibm-plex-mono-500.woff2", weight: "500", style: "normal" },
+  ],
   display: "swap",
-  weight: ["400", "500"],
   variable: "--font-mono",
 });
 
