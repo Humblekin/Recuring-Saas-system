@@ -51,13 +51,13 @@ export default function ForgotPasswordPage() {
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/25 rounded-xl text-red-300 text-sm">
           {error}
         </div>
       )}
 
       {sent ? (
-        <div className="p-6 bg-green-50 border border-green-200 rounded-xl text-green-800 text-sm">
+        <div className="p-6 bg-terracotta/10 border border-terracotta/25 rounded-xl text-terracotta-light text-sm">
           <p className="font-medium mb-1">Check your inbox</p>
           <p>
             If an account exists for <span className="font-mono">{email}</span>, a

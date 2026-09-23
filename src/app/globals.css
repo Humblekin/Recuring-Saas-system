@@ -431,3 +431,53 @@
     color: #051009;
   }
 }
+
+/* =============================================================================
+   KIVARO AMBIENT MOTION — keyframes + scoped helper classes (.lp scope)
+   Animations are globally frozen under prefers-reduced-motion (see @layer base),
+   with explicit `motion-reduce` overrides below for state that must not animate.
+   ============================================================================= */
+
+@keyframes kivaro-glow {
+  0%   { opacity: 0.4; transform: translate3d(0, 0, 0) scale(1); }
+  100% { opacity: 0.85; transform: translate3d(2rem, -1.5rem, 0) scale(1.1); }
+}
+
+@keyframes kivaro-float {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50%      { transform: translate3d(0, -10px, 0); }
+}
+
+@keyframes kivaro-marquee {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-50%, 0, 0); }
+}
+
+@keyframes kivaro-shimmer {
+  0%        { transform: translate3d(-120%, 0, 0); }
+  60%, 100% { transform: translate3d(220%, 0, 0); }
+}
+
+@keyframes kivaro-aurora {
+  0%   { transform: translate3d(-8%, -6%, 0) rotate(0deg); }
+  50%  { transform: translate3d(6%, 4%, 0) rotate(8deg); }
+  100% { transform: translate3d(-8%, -6%, 0) rotate(0deg); }
+}
+
+.lp .animate-glow      { animation: kivaro-glow 7s ease-in-out infinite alternate; }
+.lp .animate-float     { animation: kivaro-float 5s ease-in-out infinite; }
+.lp .animate-float-delay { animation: kivaro-float 6s ease-in-out infinite; animation-delay: -2.5s; }
+.lp .animate-marquee   { animation: kivaro-marquee 28s linear infinite; }
+.lp .animate-shimmer   { animation: kivaro-shimmer 4.5s ease-in-out infinite; }
+.lp .animate-aurora    { animation: kivaro-aurora 18s ease-in-out infinite alternate; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lp .animate-glow,
+  .lp .animate-float,
+  .lp .animate-float-delay,
+  .lp .animate-marquee,
+  .lp .animate-shimmer,
+  .lp .animate-aurora {
+    animation: none;
+  }
+}

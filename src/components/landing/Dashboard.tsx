@@ -26,6 +26,7 @@ export default function Dashboard() {
   
   // Animation refs
   const totalRef = useRef<HTMLDivElement>(null);
+  const recurringTotalRef = useRef<HTMLSpanElement>(null);
   const chartPathRef = useRef<SVGPathElement>(null);
   const chartPointsRef = useRef<HTMLDivElement>(null);
   const listRowsRef = useRef<HTMLDivElement>(null);
@@ -35,6 +36,12 @@ export default function Dashboard() {
   useEffect(() => {
     const el = mockupRef.current;
     if (!el) return;
+
+    // Respect reduced-motion: everything visible immediately, no count-up.
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      gsap.set(el, { opacity: 1, y: 0 });
+      return;
+    }
 
     // Reset initial states for animation
     gsap.set(el, { opacity: 0, y: 40 });
@@ -53,16 +60,23 @@ export default function Dashboard() {
       defaults: { ease: "power2.out" }
     });
 
+    const totalCounter = { val: 0 };
+    const recurringCounter = { val: 0 };
+
     // 1. Dashboard container reveals
     tl.to(el, { opacity: 1, y: 0, duration: 0.8 })
       
-      // 2. Total collected counts up (simulated by a quick fade/slide here, 
-      // actual number counter would use a dedicated hook, but GSAP text plugin or simple fade works for UI mock)
-      .fromTo(totalRef.current, 
-        { opacity: 0, y: 10 }, 
-        { opacity: 1, y: 0, duration: 0.5 }, 
-        "-=0.4"
-      )
+      // 2. Total collected counts up
+      .to(totalCounter, {
+        val: 42500,
+        duration: 1.4,
+        ease: "power1.out",
+        onUpdate: () => {
+          if (totalRef.current) {
+            totalRef.current.textContent = formatCurrency(Math.round(totalCounter.val));
+          }
+        }
+      }, "-=0.4")
       
       // 3. Chart draws naturally
       .to(chartPathRef.current, {
@@ -94,12 +108,22 @@ export default function Dashboard() {
         duration: 0.4
       }, "-=0.4")
       
-      // 7. Recurring info appears
+      // 7. Recurring info appears + its total counts up
       .to(recurringInfoRef.current, {
         opacity: 1,
         y: 0,
         duration: 0.5
-      }, "-=0.3");
+      }, "-=0.3")
+      .to(recurringCounter, {
+        val: 12800,
+        duration: 1.2,
+        ease: "power1.out",
+        onUpdate: () => {
+          if (recurringTotalRef.current) {
+            recurringTotalRef.current.textContent = formatCurrency(Math.round(recurringCounter.val));
+          }
+        }
+      }, "-=0.5");
 
     return () => {
       tl.kill();
@@ -164,7 +188,10 @@ export default function Dashboard() {
                 <div ref={recurringInfoRef} className="bg-surface p-5 rounded-xl border border-border shadow-sm flex flex-col justify-between">
                   <div className="text-xs text-ink-muted uppercase tracking-wider font-mono mb-2">Active Recurring</div>
                   <div className="flex flex-wrap items-end justify-between gap-x-3 gap-y-1">
-                    <div className="font-display text-3xl md:text-4xl whitespace-nowrap">{formatCurrency(12800)}<span className="text-lg text-ink-muted font-body">/mo</span></div>
+                    <div className="font-display text-3xl md:text-4xl whitespace-nowrap">
+                      <span ref={recurringTotalRef}>{formatCurrency(12800)}</span>
+                      <span className="text-lg text-ink-muted font-body">/mo</span>
+                    </div>
                     <div className="text-ink-muted text-sm font-medium shrink-0">
                       142 supporters
                     </div>

@@ -71,6 +71,12 @@ export default function Pricing() {
     const el = sectionRef.current;
     if (!el) return;
 
+    // Respect reduced-motion: show all cards immediately.
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      gsap.set(cardsRef.current, { opacity: 1, y: 0 });
+      return;
+    }
+
     gsap.fromTo(
       cardsRef.current,
       { opacity: 0, y: 30 },
@@ -103,10 +109,13 @@ export default function Pricing() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {PRICING_TIERS.map((tier, index) => (
+            <div key={tier.name} className="relative">
+              {tier.highlight && (
+                <div className="absolute -inset-1 rounded-3xl bg-terracotta/15 blur-2xl animate-glow pointer-events-none"></div>
+              )}
             <div 
-              key={tier.name}
               ref={(el) => { cardsRef.current[index] = el; }}
-              className={`relative flex flex-col p-8 rounded-3xl transition-all duration-300 opacity-0 ${
+              className={`relative flex flex-col p-8 rounded-3xl transition-all duration-300 opacity-0 hover:-translate-y-1 ${
                 tier.highlight 
                   ? "bg-surface border-2 border-ink shadow-card" 
                   : "bg-surface border border-border shadow-subtle hover:border-ink-muted"
@@ -148,6 +157,7 @@ export default function Pricing() {
               }`}>
                 {tier.cta}
               </Link>
+            </div>
             </div>
           ))}
         </div>

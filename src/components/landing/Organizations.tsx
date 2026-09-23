@@ -39,11 +39,22 @@ const ORGS = [
 export default function Organizations() {
   const sectionRef = useRef<HTMLElement>(null);
   const imageRef = useRef<HTMLDivElement>(null);
+  const parallaxRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return;
+
+    // Respect reduced-motion: show image + list immediately, no parallax.
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      gsap.set([imageRef.current, ...((listRef.current?.children ?? []) as HTMLElement[])], {
+        opacity: 1,
+        x: 0,
+        y: 0,
+      });
+      return;
+    }
 
     const tl = gsap.timeline({
       scrollTrigger: {
@@ -58,6 +69,19 @@ export default function Organizations() {
       imageRef.current,
       { opacity: 0, x: -40 },
       { opacity: 1, x: 0, duration: 1, ease: "power3.out" }
+    );
+
+    // Subtle parallax on the photograph
+    tl.fromTo(
+      parallaxRef.current,
+      { yPercent: -8 },
+      { yPercent: 8, ease: "none", scrollTrigger: {
+          trigger: imageRef.current,
+          start: "top bottom",
+          end: "bottom top",
+          scrub: true,
+      } },
+      "-=0.6"
     );
 
     // Stagger reveal text rows
@@ -86,13 +110,15 @@ export default function Organizations() {
             ref={imageRef}
             className="relative w-full h-[300px] sm:h-[420px] md:h-[500px] lg:h-[700px] rounded-3xl overflow-hidden bg-border/50 shadow-sm opacity-0"
           >
-            <Image 
-              src="/images/landing/team-meeting.jpg" 
-              alt="Professional African community leaders" 
-              fill
-              sizes="(min-width: 1024px) 48vw, 100vw"
-              className="object-cover"
-            />
+            <div ref={parallaxRef} className="absolute -inset-y-[10%] inset-x-0">
+              <Image 
+                src="/images/landing/team-meeting.jpg" 
+                alt="Professional African community leaders" 
+                fill
+                sizes="(min-width: 1024px) 48vw, 100vw"
+                className="object-cover"
+              />
+            </div>
           </div>
 
           {/* --- Right Column: Typography-driven List --- */}

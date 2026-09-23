@@ -52,6 +52,7 @@ export default function HowItWorks() {
   const leftColRef = useRef<HTMLDivElement>(null);
   const rightColRef = useRef<HTMLDivElement>(null);
   const progressLineRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
   const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
   
   const [activeStep, setActiveStep] = useState(0);
@@ -60,8 +61,26 @@ export default function HowItWorks() {
     // Respect reduced-motion: show all steps immediately (right visual stays static)
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       gsap.set(stepRefs.current, { opacity: 1, y: 0 });
+      gsap.set(headerRef.current, { opacity: 1, y: 0 });
       return;
     }
+
+    // Section header reveal
+    const headerTween = gsap.fromTo(
+      headerRef.current,
+      { opacity: 0, y: 24 },
+      {
+        opacity: 1,
+        y: 0,
+        duration: 0.8,
+        ease: "power2.out",
+        scrollTrigger: {
+          trigger: headerRef.current,
+          start: "top 88%",
+          toggleActions: "play none none none",
+        },
+      }
+    );
 
     // Only run on desktop where side-by-side makes sense for the visual column
     const mm = gsap.matchMedia();
@@ -119,7 +138,10 @@ export default function HowItWorks() {
        });
     });
 
-    return () => mm.revert(); // Clean up all ScrollTriggers on unmount
+    return () => {
+      headerTween.kill();
+      mm.revert(); // Clean up all ScrollTriggers on unmount
+    };
   }, []);
 
   // Map step index to a specific visual component
@@ -127,106 +149,215 @@ export default function HowItWorks() {
     switch (STEPS[index].visual) {
       case "organization":
         return (
-          <div className="w-full h-full bg-surface rounded-2xl shadow-card border border-border p-6 flex flex-col justify-center gap-4">
-             <div className="w-16 h-16 bg-cream rounded-lg border border-border shadow-sm flex items-center justify-center text-terracotta font-display text-2xl">
-               HW
-             </div>
-             <div className="h-6 w-3/4 bg-border/60 rounded-md"></div>
-             <div className="h-4 w-1/2 bg-border/40 rounded-md"></div>
+          <div className="w-full h-full relative overflow-hidden rounded-2xl bg-border">
+            <Image
+              src="/images/landing/team-meeting.jpg"
+              alt="A team setting up their organization account"
+              fill
+              sizes="(min-width: 1024px) 40vw, 100vw"
+              className="object-cover"
+              style={{ objectPosition: "50% 35%" }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#050A08]/85 via-[#050A08]/20 to-transparent"></div>
+            <div className="absolute bottom-4 left-4 right-4 bg-surface/95 backdrop-blur rounded-xl border border-border p-3.5 shadow-product">
+              <div className="flex items-center gap-3">
+                <span className="w-9 h-9 rounded-md bg-terracotta flex items-center justify-center shrink-0">
+                  <span className="font-display font-medium text-xs text-[#051009]">K</span>
+                </span>
+                <div className="min-w-0">
+                  <div className="text-[13px] font-medium text-ink truncate">HopeWorks Ghana</div>
+                  <div className="flex items-center gap-1.5 text-[11px] text-success">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    Organization ready
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         );
       case "link":
         return (
           <div className="w-full h-full bg-surface rounded-2xl shadow-card border border-border p-6 flex flex-col items-center justify-center gap-4">
-             <div className="p-3 bg-cream rounded-xl border border-border">
-               {/* Mock QR Code Pattern */}
-               <div className="w-24 h-24 sm:w-28 sm:h-28 grid grid-cols-4 grid-rows-4 gap-1 opacity-80">
-                 {Array.from({length: 16}).map((_, i) => (
-                   <div key={i} className={`bg-ink rounded-sm ${i%3===0 ? 'opacity-20' : ''}`}></div>
-                 ))}
-               </div>
-             </div>
-             <div className="w-full bg-cream p-2.5 rounded-md border border-border text-center font-mono text-xs sm:text-sm text-ink break-all">
-                kivaro.app/pay/hopeworks
-             </div>
+            <div className="p-4 bg-cream rounded-xl border border-border shadow-sm">
+              <div className="relative w-28 h-28 sm:w-32 sm:h-32">
+                {/* Fake QR modules (painted under the finder squares) */}
+                <div className="absolute inset-0 grid grid-cols-6 grid-rows-6 gap-[5px]">
+                  {Array.from({ length: 36 }).map((_, i) => (
+                    <div key={i} className={`bg-ink rounded-[1px] ${i % 4 === 1 ? "opacity-20" : ""}`}></div>
+                  ))}
+                </div>
+                {/* QR finder squares */}
+                {[
+                  "top-0 left-0",
+                  "top-0 right-0",
+                  "bottom-0 left-0",
+                ].map((pos, i) => (
+                  <div key={i} className={`absolute ${pos} w-[38%] h-[38%] border-2 border-ink rounded-[3px]`}>
+                    <div className="absolute inset-[28%] bg-ink rounded-[1px]"></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="w-full max-w-[300px] flex items-center justify-between gap-2 px-3 py-2.5 bg-cream rounded-lg border border-border">
+              <span className="font-mono text-xs text-ink truncate">kivaro.app/pay/hopeworks</span>
+              <span className="text-xs font-medium text-terracotta whitespace-nowrap">Copy</span>
+            </div>
+            <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-ink-muted">
+              Scan · Tap · Contribute
+            </p>
           </div>
         );
       case "share":
         return (
-          <div className="w-full h-full rounded-2xl overflow-hidden relative bg-border">
-            <Image 
-              src="/images/landing/share.jpg" 
-              alt="People sharing information" 
+          <div className="w-full h-full relative overflow-hidden rounded-2xl bg-border">
+            <Image
+              src="/images/landing/share.jpg"
+              alt="People sharing a payment link"
               fill
               sizes="(min-width: 1024px) 40vw, 100vw"
               className="object-cover"
             />
             <div className="absolute inset-0 bg-black/40"></div>
+
+            {/* WhatsApp-style share bubble */}
+            <div className="absolute top-6 right-5 left-5 max-w-[240px] ml-auto bg-cream text-ink rounded-2xl rounded-tr-sm px-3.5 py-2.5 text-[12px] leading-snug shadow-product">
+              <span className="font-medium">Help us finish the water project 💧</span>
+              <span className="block mt-1 text-terracotta font-mono text-[11px] break-all">
+                kivaro.app/pay/hopeworks
+              </span>
+            </div>
+
+            <div className="absolute bottom-4 left-4 bg-surface/90 backdrop-blur border border-border rounded-lg px-3 py-1.5 text-[11px] font-medium text-ink shadow-product">
+              Link shared · WhatsApp, poster, socials
+            </div>
           </div>
         );
       case "amount":
         return (
-          <div className="w-full h-full bg-surface rounded-2xl shadow-card border border-border p-5 sm:p-6 flex items-center justify-center">
-             <div className="w-full max-w-[260px] space-y-2.5">
-               <div className="flex items-center gap-2">
-                 <div className="w-7 h-7 rounded-full bg-cream border border-border flex items-center justify-center text-[10px] font-display font-medium text-terracotta shrink-0">
-                   HW
-                 </div>
-                 <div className="flex-1 min-w-0">
-                   <div className="text-xs font-medium text-ink truncate">HopeWorks Ghana</div>
-                   <div className="text-[10px] text-ink-muted font-mono uppercase tracking-wider truncate">Community Project</div>
-                 </div>
-               </div>
+          <div className="w-full h-full relative overflow-hidden rounded-2xl bg-border">
+            <Image
+              src="/images/landing/campaign.jpg"
+              alt="A supporter choosing an amount on their phone"
+              fill
+              sizes="(min-width: 1024px) 40vw, 100vw"
+              className="object-cover"
+              style={{ objectPosition: "50% 40%" }}
+            />
+            <div className="absolute inset-0 bg-[#050A08]/35"></div>
 
-               <div className="text-sm font-medium text-ink pt-1">Choose your amount</div>
+            {/* Floating contribution card */}
+            <div className="absolute bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:w-[240px] bg-surface/95 backdrop-blur rounded-2xl border border-border p-4 shadow-product">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-7 h-7 rounded-full bg-terracotta text-[#051009] flex items-center justify-center text-[10px] font-display font-medium shrink-0">
+                  HW
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xs font-medium text-ink truncate">HopeWorks Ghana</div>
+                  <div className="text-[10px] text-ink-muted font-mono uppercase tracking-wider truncate">Community Project</div>
+                </div>
+              </div>
 
-               <div className="grid grid-cols-3 gap-2">
-                 {["GHS 50", "GHS 100", "GHS 500"].map((amount, i) => (
-                   <div key={amount} className={`h-9 flex items-center justify-center rounded-lg font-mono text-[11px] border ${
-                     i === 1 ? "bg-ink text-surface border-ink shadow-sm" : "bg-cream text-ink border-border"
-                   }`}>
-                     {amount}
-                   </div>
-                 ))}
-               </div>
+              <div className="text-[13px] font-medium text-ink mb-2.5">Choose your amount</div>
 
-               <div className="flex p-1 bg-cream rounded-lg border border-border">
-                 <div className="flex-1 text-center text-[10px] font-medium text-ink-muted py-1">One-time</div>
-                 <div className="flex-1 text-center text-[10px] font-medium text-ink py-1 bg-surface rounded-md shadow-sm border border-border/50">Monthly</div>
-               </div>
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                {["GHS 50", "GHS 100", "GHS 500"].map((amount, i) => (
+                  <div key={amount} className={`h-9 flex items-center justify-center rounded-lg font-mono text-[11px] border ${
+                    i === 1 ? "bg-ink text-surface border-ink shadow-sm" : "bg-cream text-ink border-border"
+                  }`}>
+                    {amount}
+                  </div>
+                ))}
+              </div>
 
-               <div className="h-9 rounded-lg bg-terracotta flex items-center justify-center text-xs font-medium text-surface">
-                 Contribute GHS 100
-               </div>
-             </div>
+              <div className="h-9 rounded-lg bg-terracotta flex items-center justify-center text-xs font-medium text-[#051009]">
+                Contribute GHS 100
+              </div>
+            </div>
           </div>
         );
       case "recurring":
         return (
-          <div className="w-full h-full bg-cream rounded-2xl border border-border p-8 flex items-center justify-center">
-             <div className="flex bg-surface p-1 rounded-lg border border-border shadow-sm w-full max-w-xs">
-               <div className="flex-1 py-2 text-center text-sm text-ink-muted">One-time</div>
-               <div className="flex-1 py-2 text-center text-sm font-medium bg-cream rounded-md border border-border shadow-sm">Monthly</div>
-             </div>
+          <div className="w-full h-full bg-surface rounded-2xl shadow-card border border-border p-6 flex items-center justify-center">
+            <div className="w-full max-w-xs">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2.5">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-terracotta)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M1 4v6h6M23 20v-6h-6" />
+                    <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M3.51 15A9 9 0 0 0 18.36 18.36L23 14" />
+                  </svg>
+                  <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-ink-muted">Auto-debit</span>
+                </div>
+                {/* Toggle ON */}
+                <div className="relative w-10 h-6 rounded-full bg-terracotta">
+                  <div className="absolute right-0.5 top-0.5 w-5 h-5 rounded-full bg-[#051009]"></div>
+                </div>
+              </div>
+
+              <div className="bg-cream rounded-xl border border-border p-4 mb-3 flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-medium text-ink">Monthly</div>
+                  <div className="text-xs text-ink-muted mt-0.5">GHS 100 · every 1st of the month</div>
+                </div>
+                <div className="font-mono text-sm text-ink">GHS 100</div>
+              </div>
+
+              <div className="flex gap-2">
+                {[
+                  { label: "Aug", done: true },
+                  { label: "Sep", done: true },
+                  { label: "Oct", done: false },
+                ].map((m) => (
+                  <div key={m.label} className={`flex-1 flex items-center justify-center gap-1 rounded-lg border py-2 text-[11px] font-mono ${
+                    m.done ? "border-terracotta/40 bg-terracotta/10 text-terracotta" : "border-border bg-cream text-ink-muted"
+                  }`}>
+                    {m.done ? (
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    ) : (
+                      <span className="w-1.5 h-1.5 rounded-full bg-terracotta animate-pulse"></span>
+                    )}
+                    {m.label}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         );
       case "dashboard":
         return (
-          <div className="w-full h-full bg-surface rounded-2xl shadow-product border border-border p-6 flex flex-col gap-4">
-             <div className="flex justify-between items-end">
-               <div>
-                 <div className="text-xs text-ink-muted uppercase tracking-wider font-mono">Total Collected</div>
-                 <div className="text-2xl font-display mt-1">GHS 42,500</div>
-               </div>
-               <div className="badge badge-success">↑ 12%</div>
-             </div>
-             <div className="flex-1 w-full bg-cream rounded-lg border border-border relative overflow-hidden mt-4">
-                {/* Mock Chart Area */}
-                 <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-terracotta/10"></div>
-                <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 100">
-                  <path d="M0,100 L0,70 L20,60 L40,80 L60,40 L80,50 L100,20 L100,100 Z" fill="none" stroke="var(--color-terracotta)" strokeWidth="2" vectorEffect="non-scaling-stroke"/>
-                </svg>
-             </div>
+          <div className="w-full h-full relative overflow-hidden rounded-2xl bg-border">
+            <Image
+              src="/images/landing/celebration.jpg"
+              alt="A team reviewing campaign results in the Kivaro dashboard"
+              fill
+              sizes="(min-width: 1024px) 40vw, 100vw"
+              className="object-cover"
+              style={{ objectPosition: "50% 45%" }}
+            />
+            <div className="absolute inset-0 bg-[#050A08]/45"></div>
+
+            {/* Floating stat card */}
+            <div className="absolute top-6 left-1/2 -translate-x-1/2 w-[236px] bg-surface/95 backdrop-blur rounded-2xl border border-border p-4 shadow-product">
+              <div className="text-[10px] uppercase tracking-widest font-mono text-ink-muted mb-1">Total collected</div>
+              <div className="flex items-end justify-between">
+                <div className="font-display text-2xl text-ink">GHS 42,500</div>
+                <div className="badge badge-success">↑ 12%</div>
+              </div>
+              <svg className="mt-2 w-full h-8" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true">
+                <path d="M0,15 L20,12 L40,14 L60,8 L80,9 L100,3" fill="none" stroke="var(--color-terracotta)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+              </svg>
+            </div>
+
+            <div className="absolute bottom-4 left-4 right-4 bg-surface/90 backdrop-blur border border-border rounded-xl px-3.5 py-2.5 text-[11px] text-ink shadow-product flex items-center justify-between">
+              <span>142 recurring</span>
+              <span className="text-ink-muted">·</span>
+              <span>3 campaigns live</span>
+              <span className="text-ink-muted">·</span>
+              <span className="text-success">Live</span>
+            </div>
           </div>
         );
       default:
@@ -238,7 +369,7 @@ export default function HowItWorks() {
     <section id="how-it-works" className="py-20 md:py-32 bg-cream">
       <div className="section-container" ref={containerRef}>
         
-        <div className="mb-16 md:mb-24 max-w-2xl">
+        <div className="mb-16 md:mb-24 max-w-2xl" ref={headerRef}>
           <span className="section-label mb-4 block">How it works</span>
           <h2>A seamless experience for you and your supporters.</h2>
         </div>

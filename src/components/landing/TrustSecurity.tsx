@@ -96,9 +96,9 @@ export default function TrustSecurity() {
             <div
               key={index}
               ref={(el) => { cardsRef.current[index] = el; }}
-              className="bg-cream border border-border p-8 rounded-2xl opacity-0"
+              className="bg-cream border border-border p-8 rounded-2xl opacity-0 transition-transform duration-300 hover:-translate-y-1"
             >
-              <div className="w-12 h-12 rounded-xl bg-terracotta/10 flex items-center justify-center text-terracotta mb-6">
+              <div className="w-12 h-12 rounded-xl bg-terracotta/10 flex items-center justify-center text-terracotta mb-6 transition-transform duration-300 hover:scale-110">
                 {point.icon}
               </div>
               <h3 className="text-xl font-medium mb-3">{point.title}</h3>

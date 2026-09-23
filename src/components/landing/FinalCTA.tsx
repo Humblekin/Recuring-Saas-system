@@ -84,8 +84,11 @@ export default function FinalCTA() {
       <div className="section-container relative z-10">
         <div
           ref={contentRef}
-          className="max-w-3xl text-center mx-auto opacity-0"
+          className="relative max-w-3xl text-center mx-auto opacity-0"
         >
+          {/* Soft animated glow behind the message */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[34rem] h-[34rem] rounded-full bg-terracotta/20 blur-3xl animate-glow pointer-events-none -z-10"></div>
+
           <h2 className="text-4xl md:text-5xl lg:text-6xl text-ink mb-6">
             Start collecting, properly.
           </h2>

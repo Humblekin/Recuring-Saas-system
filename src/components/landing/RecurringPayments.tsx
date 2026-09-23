@@ -31,6 +31,12 @@ export default function RecurringPayments() {
     const el = sectionRef.current;
     if (!el) return;
 
+    // Respect reduced-motion: show the timeline as-is, no scrub animation.
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      gsap.set(el, { opacity: 1 });
+      return;
+    }
+
     // Timeline animation triggered on scroll
     const tl = gsap.timeline({
       scrollTrigger: {
@@ -110,7 +116,10 @@ export default function RecurringPayments() {
 
           {/* --- Right Column: Timeline Animation --- */}
           <div className="relative p-5 sm:p-8 lg:p-12 bg-surface rounded-3xl border border-border shadow-card overflow-hidden">
-            
+
+            {/* Ambient glow */}
+            <div className="absolute -top-12 -right-12 w-64 h-64 rounded-full bg-terracotta/15 blur-3xl animate-glow pointer-events-none"></div>
+
             <div className="relative pl-5 sm:pl-6">
               {/* Connecting Line */}
               <div 
@@ -127,7 +136,7 @@ export default function RecurringPayments() {
                   <div 
                     key={index}
                     ref={(el) => { itemsRef.current[index] = el; }}
-                    className="relative flex flex-wrap items-center justify-between gap-x-3 gap-y-2 p-3.5 sm:p-4 rounded-xl bg-cream border border-border shadow-sm"
+                    className="relative flex flex-wrap items-center justify-between gap-x-3 gap-y-2 p-3.5 sm:p-4 rounded-xl bg-cream border border-border shadow-sm transition-transform duration-300 hover:-translate-y-0.5"
                   >
                     {/* Node Dot */}
                     <div className={`absolute -left-[25px] sm:-left-[29px] top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 bg-surface z-20 ${

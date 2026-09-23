@@ -47,9 +47,12 @@ export default function PaymentDemo() {
         </div>
 
         <div className="max-w-md mx-auto relative perspective-1000">
-          
+
           {/* Subtle frame */}
           <div className="absolute -inset-6 rounded-[2.5rem] border border-border -z-10"></div>
+
+          {/* Ambient glow */}
+          <div className="absolute -inset-10 -z-20 rounded-full bg-terracotta/15 blur-3xl animate-glow pointer-events-none"></div>
           
           <div className="bg-surface rounded-3xl shadow-product border border-border overflow-hidden">
             
@@ -121,7 +124,18 @@ export default function PaymentDemo() {
                   >
                     <div className="text-center mb-8">
                       <div className="text-sm text-ink-muted mb-1">You are contributing</div>
-                      <div className="text-3xl font-mono font-medium">{formatCurrency(amount)}</div>
+                      <AnimatePresence mode="popLayout">
+                        <motion.div
+                          key={amount}
+                          initial={{ y: 10, opacity: 0 }}
+                          animate={{ y: 0, opacity: 1 }}
+                          exit={{ y: -10, opacity: 0 }}
+                          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                          className="text-3xl font-mono font-medium"
+                        >
+                          {formatCurrency(amount)}
+                        </motion.div>
+                      </AnimatePresence>
                     </div>
 
                     <h4 className="text-sm font-medium mb-4 text-center">How often?</h4>

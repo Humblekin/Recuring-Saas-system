@@ -21,7 +21,7 @@ export default function Hero() {
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       gsap.set(
-        [headlineRef.current, copyRef.current, ctaRef.current, imageRef.current].filter(Boolean),
+        [Array.from(headlineRef.current?.children ?? []), copyRef.current, ctaRef.current, imageRef.current].filter(Boolean),
         { opacity: 1, y: 0, x: 0, scale: 1 }
       );
       return;
@@ -30,9 +30,9 @@ export default function Hero() {
     const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
 
     tl.fromTo(
-      headlineRef.current,
+      Array.from(headlineRef.current?.children ?? []),
       { y: 40, opacity: 0 },
-      { y: 0, opacity: 1, duration: 1, delay: 0.2 }
+      { y: 0, opacity: 1, duration: 1, stagger: 0.09, delay: 0.2 }
     )
       .fromTo(
         copyRef.current,
@@ -73,7 +73,20 @@ export default function Hero() {
               ref={headlineRef}
               className="tracking-tight text-balance opacity-0"
             >
-              Recurring payments, made simple.
+              {"Recurring payments, made simple.".split(" ").map((word, i) => (
+                <span
+                  key={i}
+                  className={`inline-block overflow-hidden align-top ${
+                    i !== "Recurring payments, made simple.".split(" ").length - 1
+                      ? "mr-[0.25em]"
+                      : ""
+                  }`}
+                >
+                  <span className={`inline-block will-change-transform ${i === 0 ? "text-terracotta" : ""}`}>
+                    {word}
+                  </span>
+                </span>
+              ))}
             </h1>
 
             <p
@@ -117,6 +130,38 @@ export default function Hero() {
               <div className="absolute inset-0 bg-[#050A08]/70"></div>
             </div>
 
+            {/* Ambient glow behind the mock card */}
+            <div className="absolute -bottom-14 -right-10 w-72 h-72 rounded-full bg-terracotta/20 blur-3xl animate-glow pointer-events-none"></div>
+
+            {/* Floating activity chips */}
+            <div className="absolute top-8 left-6 sm:left-10 z-20 animate-float pointer-events-none">
+              <div className="flex items-center gap-2.5 bg-surface/90 backdrop-blur border border-border rounded-xl px-3 py-2 shadow-product">
+                <div className="w-7 h-7 rounded-full bg-terracotta text-[#051009] flex items-center justify-center text-[11px] font-medium">
+                  A
+                </div>
+                <div>
+                  <div className="text-[11px] font-medium leading-tight text-ink">Ama contributed</div>
+                  <div className="text-[11px] font-mono text-ink-muted leading-tight">GHS 100 · just now</div>
+                </div>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-terracotta)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </div>
+            </div>
+
+            <div className="absolute top-24 right-6 sm:right-8 z-20 animate-float-delay pointer-events-none hidden sm:block">
+              <div className="flex items-center gap-2.5 bg-surface/90 backdrop-blur border border-border rounded-xl px-3 py-2 shadow-product">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-terracotta)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M1 4v6h6M23 20v-6h-6" />
+                  <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M3.51 15A9 9 0 0 0 18.36 18.36L23 14" />
+                </svg>
+                <div>
+                  <div className="text-[11px] font-medium leading-tight text-ink">Recurring active</div>
+                  <div className="text-[11px] font-mono text-ink-muted leading-tight">GHS 100 / month</div>
+                </div>
+              </div>
+            </div>
+
             {/* Kivaro payment card mock */}
             <motion.div
               className="absolute -bottom-6 left-6 right-6 mx-auto max-w-[400px] lg:mx-0 lg:left-[-3rem] 2xl:left-[-6rem] lg:right-auto lg:w-[360px] bg-surface p-6 rounded-2xl shadow-product border border-border z-30"
@@ -143,6 +188,11 @@ export default function Hero() {
                   <span className="w-1.5 h-1.5 rounded-full bg-terracotta animate-pulse" />
                   Active
                 </span>
+              </div>
+
+              {/* Shimmer sweep across the card */}
+              <div className="pointer-events-none absolute inset-0 rounded-2xl overflow-hidden" aria-hidden="true">
+                <div className="absolute top-0 left-0 h-full w-1/3 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer"></div>
               </div>
 
               <div className="mb-6">

@@ -17,11 +17,33 @@ export default function CampaignsQR() {
   const sectionRef = useRef<HTMLElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLDivElement>(null);
+  const qrRef = useRef<HTMLDivElement>(null);
+  const progressRef = useRef<HTMLDivElement>(null);
   const itemsRef = useRef<(HTMLLIElement | null)[]>([]);
 
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return;
+
+    // Respect reduced-motion: show everything at full state, no choreography.
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      const targets = [
+        cardRef.current,
+        imageRef.current,
+        qrRef.current,
+        progressRef.current,
+        ...itemsRef.current.filter(Boolean),
+      ].filter(Boolean);
+      gsap.set(targets, {
+        opacity: 1,
+        scale: 1,
+        width: "62%",
+        x: 0,
+      });
+      return;
+    }
+
+    gsap.set(progressRef.current, { width: "0%" });
 
     const tl = gsap.timeline({
       scrollTrigger: {
@@ -43,10 +65,22 @@ export default function CampaignsQR() {
       "-=0.6"
     )
     .fromTo(
+      qrRef.current,
+      { scale: 0.8, opacity: 0.4 },
+      { scale: 1, opacity: 1, duration: 0.7, ease: "back.out(1.6)" },
+      "-=0.4"
+    )
+    .fromTo(
+      progressRef.current,
+      { width: "0%" },
+      { width: "62%", duration: 1.2, ease: "power2.inOut" },
+      "-=0.5"
+    )
+    .fromTo(
       itemsRef.current,
       { opacity: 0, x: -15 },
       { opacity: 1, x: 0, duration: 0.4, stagger: 0.1, ease: "power2.out" },
-      "-=0.4"
+      "-=0.8"
     );
 
     return () => {
@@ -62,9 +96,9 @@ export default function CampaignsQR() {
           
           {/* --- Left Column: Campaigns & QR Card --- */}
           <div className="order-2 lg:order-1 relative perspective-1000">
-            <div 
+            <div
               ref={cardRef}
-              className="bg-cream rounded-3xl border border-border shadow-elevated p-6 sm:p-8 max-w-md mx-auto opacity-0"
+              className="relative bg-cream rounded-3xl border border-border shadow-elevated p-6 sm:p-8 max-w-md mx-auto opacity-0"
             >
               <div className="flex justify-between items-start mb-6">
                 <div>
@@ -89,13 +123,21 @@ export default function CampaignsQR() {
                   <span className="text-ink-muted font-mono">Goal: GHS 20,000</span>
                 </div>
                 <div className="w-full h-2 bg-border rounded-full overflow-hidden">
-                  <div className="h-full bg-terracotta rounded-full w-[62%]"></div>
+                  <div ref={progressRef} className="h-full bg-terracotta rounded-full"></div>
+                </div>
+              </div>
+
+              {/* Floating new-contribution chip */}
+              <div className="absolute top-4 right-6 z-20 animate-float pointer-events-none">
+                <div className="flex items-center gap-2 bg-surface/90 backdrop-blur border border-border rounded-xl px-3 py-2 shadow-product">
+                  <div className="w-1.5 h-1.5 rounded-full bg-terracotta animate-pulse"></div>
+                  <span className="text-[11px] font-medium text-ink">New · GHS 100</span>
                 </div>
               </div>
 
               {/* QR Code Area */}
               <div className="bg-surface rounded-2xl p-6 border border-border flex flex-col items-center">
-                <div className="p-4 bg-cream rounded-xl border border-border mb-4">
+                <div ref={qrRef} className="p-4 bg-cream rounded-xl border border-border mb-4">
                   {/* Mock QR Code */}
                   <div className="w-32 h-32 grid grid-cols-5 grid-rows-5 gap-1 opacity-80">
                      {Array.from({length: 25}).map((_, i) => (

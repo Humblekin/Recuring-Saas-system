@@ -66,15 +66,17 @@ export default function LoginPage({
     <div>
       {/* Mobile Logo */}
       <div className="lg:hidden mb-8">
-        <Link href="/" className="flex items-center gap-2 text-ink no-underline">
-          <div className="w-8 h-8 bg-ink rounded-md flex items-center justify-center">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <ellipse cx="12" cy="12" rx="5" ry="7" stroke="white" strokeWidth="1.5" fill="none" />
-              <ellipse cx="12" cy="12" rx="2" ry="3.5" fill="white" opacity="0.6" />
-            </svg>
-          </div>
-          <span className="text-xl tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
-            Cowrie
+        <Link href="/" className="flex items-center gap-2.5 text-ink no-underline">
+          <span
+            className="w-8 h-8 rounded-md bg-terracotta flex items-center justify-center shrink-0"
+            aria-hidden="true"
+          >
+            <span className="font-display font-medium text-sm leading-none text-[#051009]">
+              K
+            </span>
+          </span>
+          <span className="text-xl tracking-tight" style={{ fontFamily: "var(--font-display)", fontWeight: 500 }}>
+            Kivaro
           </span>
         </Link>
       </div>
@@ -89,13 +91,13 @@ export default function LoginPage({
       </div>
 
       {resetComplete && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl text-green-800 text-sm">
+        <div className="mb-6 p-4 bg-terracotta/10 border border-terracotta/25 rounded-xl text-terracotta-light text-sm">
           Your password has been reset. Sign in with your new password.
         </div>
       )}
 
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/25 rounded-xl text-red-300 text-sm">
           {error}
         </div>
       )}
