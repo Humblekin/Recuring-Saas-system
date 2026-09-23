@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -19,6 +20,7 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = (await headers()).get("x-cowrie-pathname") || "";
   const session = await requireAuth().catch(() => redirect("/login"));
   confirmSession(session);
 
@@ -26,9 +28,18 @@ export default async function DashboardLayout({
     where: eq(users.neonAuthId, session.user.id),
   });
 
-  // Users with no organization are sent through onboarding.
-  if (!user || !user.organizationId) {
-    redirect("/dashboard/onboarding");
+  // No local account record → user must create or join an organization first.
+  if (!user) {
+    redirect("/register");
+  }
+  // Users with no organization are sent through onboarding — EXCEPT when they
+  // are already on the onboarding page. redirect() to the same route would
+  // cycle forever (ERR_TOO_MANY_REDIRECTS); the onboarding page handles the
+  // no-org case itself (it redirects to /register).
+  if (!user.organizationId) {
+    if (pathname !== "/dashboard/onboarding") {
+      redirect("/dashboard/onboarding");
+    }
   }
 
   const [unreadCount, feed] = await Promise.all([

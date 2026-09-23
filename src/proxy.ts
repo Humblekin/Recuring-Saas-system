@@ -15,7 +15,11 @@ const NEON_AUTH_SESSION_COOKIE_NAME = "__Secure-neon-auth.session_token";
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const response = NextResponse.next();
+  // Expose the request path to layouts/server components. The (dashboard)
+  // layout uses it to avoid redirecting /dashboard/onboarding to itself
+  // (which would cause an infinite redirect loop).
+  request.headers.set("x-cowrie-pathname", pathname);
+  const response = NextResponse.next({ request });
 
   // --- CSRF Protection ---
   // Block non-GET/HEAD requests without proper origin
