@@ -37,9 +37,9 @@ const ibmPlexMono = localFont({
 // =============================================================================
 
 export const metadata: Metadata = {
-  title: "Cowrie — Payment Links & Recurring Payments for Organizations",
+  title: "Kivaro — Payment Links & Recurring Payments for Organizations",
   description:
-    "Give your organization one place to collect, manage, and understand every contribution. Payment links, QR codes, recurring payments, and a dashboard — built for NGOs, schools, nonprofits, and communities across Africa.",
+    "Recurring payments, made simple. Payment links, QR codes, recurring payments, and a dashboard — built for NGOs, schools, nonprofits, and communities across Ghana.",
   keywords: [
     "payment links",
     "recurring payments",
@@ -53,18 +53,18 @@ export const metadata: Metadata = {
     "contribution management",
     "nonprofit payments",
   ],
-  authors: [{ name: "Cowrie" }],
+  authors: [{ name: "Kivaro" }],
   openGraph: {
-    title: "Cowrie — Payment Links & Recurring Payments for Organizations",
+    title: "Kivaro — Recurring payments, made simple.",
     description:
       "Give your organization one place to collect, manage, and understand every contribution.",
     type: "website",
     locale: "en_GH",
-    siteName: "Cowrie",
+    siteName: "Kivaro",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Cowrie — Payment Links & Recurring Payments for Organizations",
+    title: "Kivaro — Recurring payments, made simple.",
     description:
       "Give your organization one place to collect, manage, and understand every contribution.",
   },

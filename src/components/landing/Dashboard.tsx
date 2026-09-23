@@ -126,7 +126,7 @@ export default function Dashboard() {
           {/* Mockup Header (Nav) */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-surface">
             <div className="flex items-center gap-6">
-              <div className="font-display font-medium text-lg tracking-tight">Cowrie</div>
+              <div className="font-display font-medium text-lg tracking-tight">Kivaro</div>
               <div className="hidden sm:flex gap-4 text-sm font-medium">
                 <span className="text-ink bg-cream px-3 py-1.5 rounded-md border border-border">Overview</span>
                 <span className="text-ink-muted hover:text-ink px-3 py-1.5 transition-colors">Contributions</span>
@@ -138,7 +138,7 @@ export default function Dashboard() {
                 <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse"></div>
                 Live
               </div>
-              <div className="w-8 h-8 rounded-full bg-terracotta text-white flex items-center justify-center font-medium text-xs">
+              <div className="w-8 h-8 rounded-full bg-terracotta text-[#051009] flex items-center justify-center font-medium text-xs">
                 HW
               </div>
             </div>
@@ -188,19 +188,12 @@ export default function Dashboard() {
                    </div>
                    
                    {/* SVG Chart Line */}
-                   <svg className="absolute inset-0 w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 100 100">
-                     {/* Gradient Fill under line */}
-                     <defs>
-                        <linearGradient id="chart-gradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="var(--color-terracotta)" stopOpacity="0.2" />
-                          <stop offset="100%" stopColor="var(--color-terracotta)" stopOpacity="0" />
-                        </linearGradient>
-                     </defs>
-                     <path 
-                       d="M0,80 L15,65 L30,75 L45,40 L60,45 L75,20 L90,25 L100,10" 
-                       fill="url(#chart-gradient)" 
-                       className="opacity-50"
-                     />
+                     <svg className="absolute inset-0 w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 100 100">
+                       <path 
+                         d="M0,80 L15,65 L30,75 L45,40 L60,45 L75,20 L90,25 L100,10" 
+                         fill="var(--color-terracotta)" 
+                         fillOpacity="0.12"
+                       />
                      <path 
                        ref={chartPathRef}
                        d="M0,80 L15,65 L30,75 L45,40 L60,45 L75,20 L90,25 L100,10" 

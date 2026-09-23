@@ -61,7 +61,7 @@ export default function TrustStrip() {
             <div key={category} className="flex items-center gap-4 md:gap-6">
               <span>{category}</span>
               {idx < CATEGORIES.length - 1 && (
-                <span className="text-border text-[0.5rem]">●</span>
+                <span className="text-terracotta/60 text-[0.5rem]">●</span>
               )}
             </div>
           ))}

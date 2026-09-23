@@ -89,9 +89,7 @@ export default function CampaignsQR() {
                   <span className="text-ink-muted font-mono">Goal: GHS 20,000</span>
                 </div>
                 <div className="w-full h-2 bg-border rounded-full overflow-hidden">
-                  <div className="h-full bg-terracotta rounded-full w-[62%] relative overflow-hidden">
-                    <div className="absolute inset-0 bg-white/20 w-full h-full -translate-x-full animate-[shimmer_2s_infinite]"></div>
-                  </div>
+                  <div className="h-full bg-terracotta rounded-full w-[62%]"></div>
                 </div>
               </div>
 
@@ -107,7 +105,7 @@ export default function CampaignsQR() {
                 </div>
                 
                 <div className="w-full flex items-center justify-between p-3 rounded-lg bg-cream border border-border mb-4">
-                  <span className="text-sm font-mono text-ink-muted truncate mr-4">cowrie.app/c/water-project</span>
+                  <span className="text-sm font-mono text-ink-muted truncate mr-4">kivaro.app/c/water-project</span>
                   <button className="text-xs font-medium text-terracotta whitespace-nowrap hover:underline">Copy Link</button>
                 </div>
 

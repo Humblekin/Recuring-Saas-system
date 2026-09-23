@@ -11,7 +11,7 @@ if (typeof window !== "undefined") {
 }
 
 // =============================================================================
-// FINAL CTA — Powerful photographic section
+// FINAL CTA — Photographic closing section
 // =============================================================================
 
 export default function FinalCTA() {
@@ -60,51 +60,51 @@ export default function FinalCTA() {
   }, []);
 
   return (
-    <section id="get-started" ref={sectionRef} className="relative py-32 md:py-48 overflow-hidden bg-ink">
-      
+    <section id="get-started" ref={sectionRef} className="relative py-32 md:py-48 overflow-hidden bg-cream border-t border-border">
+
       {/* Background Photography with Parallax */}
-      <div className="absolute inset-0 overflow-hidden bg-ink">
+      <div className="absolute inset-0 overflow-hidden bg-cream">
         <div
           ref={imageRef}
           className="absolute -inset-y-[12%] inset-x-0"
         >
           <Image
             src="/images/landing/celebration.jpg"
-            alt="African community team celebrating project completion"
+            alt="Team celebrating project completion"
             fill
             sizes="100vw"
             className="object-cover"
             style={{ objectPosition: "50% 40%" }}
           />
         </div>
-        {/* Dark overlay for text readability */}
-        <div className="absolute inset-0 bg-ink/70"></div>
+        {/* Flat dark overlay for text readability */}
+        <div className="absolute inset-0 bg-[#050A08]/75"></div>
       </div>
 
       <div className="section-container relative z-10">
-        <div 
+        <div
           ref={contentRef}
           className="max-w-3xl text-center mx-auto opacity-0"
         >
-          <h2 className="text-4xl md:text-5xl lg:text-6xl text-cream mb-6">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl text-ink mb-6">
             Start collecting, properly.
           </h2>
-          
-          <p className="text-xl md:text-2xl text-cream/80 mb-10 text-balance leading-relaxed">
+
+          <p className="text-xl md:text-2xl text-ink-light mb-10 text-balance leading-relaxed">
             Give your organization one place to collect, manage, and understand every contribution.
           </p>
-          
+
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/register" className="btn-primary bg-cream text-ink hover:bg-white w-full sm:w-auto text-lg py-4 px-8 inline-block text-center no-underline">
-              Create your payment link
+            <Link href="/register" className="btn-primary w-full sm:w-auto text-lg py-4 px-8 inline-block text-center no-underline">
+              Get Started
             </Link>
-            <a href="#how-it-works" className="btn-secondary text-cream border-cream/30 hover:border-cream hover:bg-cream/10 w-full sm:w-auto text-lg py-4 px-8">
-              See how it works
+            <a href="#how-it-works" className="btn-secondary border-white/30 hover:border-white hover:bg-white/10 w-full sm:w-auto text-lg py-4 px-8">
+              See How It Works
             </a>
           </div>
         </div>
       </div>
-      
+
     </section>
   );
 }

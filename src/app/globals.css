@@ -373,3 +373,61 @@
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-muted);
 }
+
+/* =============================================================================
+   LANDING (KIVARO) — Scoped dark palette
+   Deep green-black base with controlled green accents. Overrides live only on
+   `.lp`, so dashboard/auth keep the shared cream theme: Tailwind v4 utilities
+   resolve var(--color-*) at the element, inheriting this scope.
+   ============================================================================= */
+
+.lp {
+  --color-cream: #070c0a;
+  --color-cream-dark: #090f0c;
+  --color-ivory: #0b1310;
+  --color-ink: #e9f0ea;
+  --color-ink-light: #b6c3bb;
+  --color-ink-muted: #8a9990;
+  --color-terracotta: #2fbe6f;
+  --color-terracotta-dark: #27a45f;
+  --color-terracotta-light: #4ed68a;
+  --color-surface: #101a15;
+  --color-border: #1d2b24;
+  --color-border-light: #253530;
+  --color-muted: #687970;
+  --color-success: #2fbe6f;
+  --color-warning: #d9a441;
+  --color-error: #e06a6a;
+  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-card: 0 2px 10px rgba(0, 0, 0, 0.45);
+  --shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-product: 0 16px 48px rgba(0, 0, 0, 0.55);
+}
+
+@layer components {
+  .lp .btn-primary {
+    background-color: var(--color-terracotta);
+    color: #051009;
+  }
+
+  .lp .btn-primary:hover {
+    background-color: var(--color-terracotta-light);
+    color: #051009;
+  }
+
+  .lp input,
+  .lp textarea,
+  .lp select {
+    color: var(--color-ink);
+  }
+
+  .lp input::placeholder,
+  .lp textarea::placeholder {
+    color: var(--color-ink-muted);
+  }
+
+  .lp ::selection {
+    background-color: var(--color-terracotta);
+    color: #051009;
+  }
+}

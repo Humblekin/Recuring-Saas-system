@@ -87,7 +87,7 @@ export default function RecurringPayments() {
             <span className="section-label mb-4 block">Recurring Payments</span>
             <h2 className="mb-6">Predictable support, automatically.</h2>
             <p className="text-body-lg mb-8">
-              Stop chasing payments every month. Supporters authorize a recurring schedule, and Cowrie helps manage the payments that follow.
+              Stop chasing payments every month. Supporters authorize a recurring schedule, and Kivaro helps manage the payments that follow.
             </p>
             
             <ul className="space-y-4">
@@ -110,9 +110,6 @@ export default function RecurringPayments() {
 
           {/* --- Right Column: Timeline Animation --- */}
           <div className="relative p-5 sm:p-8 lg:p-12 bg-surface rounded-3xl border border-border shadow-card overflow-hidden">
-            
-            {/* Background gradient hint */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-terracotta/5 rounded-full blur-3xl -z-10"></div>
             
             <div className="relative pl-5 sm:pl-6">
               {/* Connecting Line */}

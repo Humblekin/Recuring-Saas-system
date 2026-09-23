@@ -90,34 +90,23 @@ export default function Navbar() {
           {/* Logo */}
           <Link
             href="/"
-            className="flex items-center gap-2 text-ink no-underline"
-            aria-label="Cowrie home"
+            className="flex items-center gap-2.5 text-ink no-underline"
+            aria-label="Kivaro home"
           >
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-ink rounded-md flex items-center justify-center">
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"
-                    fill="white"
-                  />
-                  <ellipse cx="12" cy="12" rx="5" ry="7" stroke="white" strokeWidth="1.5" fill="none" />
-                  <ellipse cx="12" cy="12" rx="2" ry="3.5" fill="white" opacity="0.6" />
-                </svg>
-              </div>
-              <span
-                className="text-xl tracking-tight"
-                style={{ fontFamily: "var(--font-display)", fontWeight: 400 }}
-              >
-                Cowrie
+            <span
+              className="w-8 h-8 rounded-md bg-terracotta flex items-center justify-center shrink-0"
+              aria-hidden="true"
+            >
+              <span className="font-display font-medium text-sm leading-none text-[#051009]">
+                K
               </span>
-            </div>
+            </span>
+            <span
+              className="text-xl tracking-tight"
+              style={{ fontFamily: "var(--font-display)", fontWeight: 500 }}
+            >
+              Kivaro
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -147,7 +136,7 @@ export default function Navbar() {
             </Link>
 
             <Link href="/register" className="btn-primary text-sm py-2.5 px-5">
-              Create your payment link
+              Get Started
             </Link>
           </div>
 
@@ -221,7 +210,7 @@ export default function Navbar() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="pt-4 border-t border-border"
+                className="pt-4 border-t border-border flex flex-col gap-4"
               >
                 <Link
                   href="/login"
@@ -232,7 +221,7 @@ export default function Navbar() {
                 </Link>
 
                 <Link href="/register" className="btn-primary w-full text-center">
-                  Create your payment link
+                  Get Started
                 </Link>
               </motion.div>
             </div>

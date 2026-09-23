@@ -143,7 +143,7 @@ export default function Pricing() {
 
               <Link href="/register" className={`w-full py-3 rounded-xl font-medium transition-colors text-center no-underline block ${
                 tier.highlight 
-                  ? "bg-ink text-surface hover:bg-terracotta-dark" 
+                  ? "btn-primary" 
                   : "bg-cream border border-border text-ink hover:bg-border/50"
               }`}>
                 {tier.cta}

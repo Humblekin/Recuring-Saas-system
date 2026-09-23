@@ -17,7 +17,7 @@ if (typeof window !== "undefined") {
 const TRUST_POINTS = [
   {
     title: "Secure infrastructure",
-    description: "Cowrie is built on modern, secure cloud infrastructure to ensure your organization's data remains protected and available when you need it.",
+    description: "Kivaro is built on modern, secure cloud infrastructure to ensure your organization's data remains protected and available when you need it.",
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
@@ -79,30 +79,30 @@ export default function TrustSecurity() {
   }, []);
 
   return (
-    <section ref={sectionRef} className="py-24 bg-ink text-cream border-t border-white/10">
+    <section ref={sectionRef} className="py-24 bg-surface border-t border-border">
       <div className="section-container">
-        
+
         <div className="text-center max-w-2xl mx-auto mb-16">
-          <span className="section-label mb-4 block text-terracotta-light">Trust & Security</span>
-          <h2 className="mb-6 text-cream">Built for peace of mind.</h2>
-          <p className="text-body-lg text-cream/70">
-            We focus on the tools, and our payment partners focus on the processing. 
+          <span className="section-label mb-4 block">Trust & Security</span>
+          <h2 className="mb-6">Built for peace of mind.</h2>
+          <p className="text-body-lg text-ink-light">
+            We focus on the tools, and our payment partners focus on the processing.
             A clear, secure separation of concerns.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {TRUST_POINTS.map((point, index) => (
-            <div 
+            <div
               key={index}
               ref={(el) => { cardsRef.current[index] = el; }}
-              className="bg-surface/5 border border-white/10 p-8 rounded-2xl opacity-0"
+              className="bg-cream border border-border p-8 rounded-2xl opacity-0"
             >
-              <div className="w-12 h-12 rounded-xl bg-surface/10 flex items-center justify-center text-terracotta-light mb-6">
+              <div className="w-12 h-12 rounded-xl bg-terracotta/10 flex items-center justify-center text-terracotta mb-6">
                 {point.icon}
               </div>
-              <h3 className="text-xl font-medium mb-3 text-cream">{point.title}</h3>
-              <p className="text-cream/70 text-sm leading-relaxed">
+              <h3 className="text-xl font-medium mb-3">{point.title}</h3>
+              <p className="text-ink-light text-sm leading-relaxed">
                 {point.description}
               </p>
             </div>

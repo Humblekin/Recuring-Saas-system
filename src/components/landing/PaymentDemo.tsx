@@ -48,8 +48,8 @@ export default function PaymentDemo() {
 
         <div className="max-w-md mx-auto relative perspective-1000">
           
-          {/* Background Decorative Elements */}
-          <div className="absolute -inset-10 bg-gradient-to-tr from-terracotta/5 to-ink/5 rounded-[3rem] blur-xl -z-10"></div>
+          {/* Subtle frame */}
+          <div className="absolute -inset-6 rounded-[2.5rem] border border-border -z-10"></div>
           
           <div className="bg-surface rounded-3xl shadow-product border border-border overflow-hidden">
             
@@ -250,7 +250,7 @@ export default function PaymentDemo() {
                     exit={{ opacity: 0 }}
                     className="absolute inset-0 flex flex-col items-center justify-center bg-surface z-10"
                   >
-                    <div className="w-12 h-12 border-4 border-cream border-t-terracotta rounded-full animate-spin mb-6"></div>
+                    <div className="w-12 h-12 border-4 border-border border-t-terracotta rounded-full animate-spin mb-6"></div>
                     <p className="font-medium animate-pulse text-ink">Processing securely...</p>
                   </motion.div>
                 )}

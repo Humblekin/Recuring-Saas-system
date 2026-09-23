@@ -17,12 +17,12 @@ if (typeof window !== "undefined") {
 const STEPS = [
   {
     title: "Create your organization",
-    description: "Set up your Cowrie account in minutes. Add your team, customize your branding, and connect your payout account.",
+    description: "Set up your Kivaro account in minutes. Add your team, customize your branding, and connect your payout account.",
     visual: "organization"
   },
   {
     title: "Get your link & QR",
-    description: "Cowrie automatically generates a universal payment link and downloadable QR code for your organization.",
+    description: "Kivaro automatically generates a universal payment link and downloadable QR code for your organization.",
     visual: "link"
   },
   {
@@ -147,7 +147,7 @@ export default function HowItWorks() {
                </div>
              </div>
              <div className="w-full bg-cream p-2.5 rounded-md border border-border text-center font-mono text-xs sm:text-sm text-ink break-all">
-                cowrie.app/pay/hopeworks
+                kivaro.app/pay/hopeworks
              </div>
           </div>
         );
@@ -161,7 +161,7 @@ export default function HowItWorks() {
               sizes="(min-width: 1024px) 40vw, 100vw"
               className="object-cover"
             />
-            <div className="absolute inset-0 bg-ink/20"></div>
+            <div className="absolute inset-0 bg-black/40"></div>
           </div>
         );
       case "amount":
@@ -222,7 +222,7 @@ export default function HowItWorks() {
              </div>
              <div className="flex-1 w-full bg-cream rounded-lg border border-border relative overflow-hidden mt-4">
                 {/* Mock Chart Area */}
-                <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-terracotta/20 to-transparent"></div>
+                 <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-terracotta/10"></div>
                 <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 100">
                   <path d="M0,100 L0,70 L20,60 L40,80 L60,40 L80,50 L100,20 L100,100 Z" fill="none" stroke="var(--color-terracotta)" strokeWidth="2" vectorEffect="non-scaling-stroke"/>
                 </svg>
