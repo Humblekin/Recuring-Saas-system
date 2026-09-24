@@ -1,6 +1,6 @@
-# Cowrie
+# Kivaro
 
-Cowrie is a recurring-payments SaaS for Ghanaian churches, mosques, NGOs, schools, and community groups. Organizations mint simple payment links and donation pages, share them anywhere (including QR codes), and collect one-time or recurring contributions paid with **MTN Mobile Money** (MoMo Collection API).
+Kivaro is a recurring-payments SaaS for Ghanaian churches, mosques, NGOs, schools, and community groups. Organizations mint simple payment links and donation pages, share them anywhere (including QR codes), and collect one-time or recurring contributions paid with **MTN Mobile Money** (MoMo Collection API).
 
 ## Features
 
@@ -9,7 +9,7 @@ Cowrie is a recurring-payments SaaS for Ghanaian churches, mosques, NGOs, school
 - **Payment links** — create/pause/edit/delete links with suggested amounts, one-time or recurring (weekly/monthly/yearly) toggles, share/copy URLs and QR codes.
 - **Campaigns** — each campaign gets its own public page with a progress bar and raised total.
 - **Public giving pages** — `/give/<orgSlug>`, `/give/<orgSlug>/link/<linkSlug>`, `/give/<orgSlug>/<campaignSlug>`; supporters enter their MTN MoMo number and approve the payment in their phone's MoMo app.
-- **Recurring subscription management** — MTN MoMo **pre-approvals**: supporters authorize automatic debits once, Cowrie charges them on schedule (cron), and the dashboard owner can cancel anytime.
+- **Recurring subscription management** — MTN MoMo **pre-approvals**: supporters authorize automatic debits once, Kivaro charges them on schedule (cron), and the dashboard owner can cancel anytime.
 - **Dashboard** — overview (totals, 6-month chart, recent contributions), contributions table, reports with CSV export, team roles (owner/admin), settings, notifications bell.
 - **Webhooks** — MTN MoMo callback handler with event deduplication; settles one-time charges and pre-approvals, with in-app notifications.
 
@@ -73,7 +73,7 @@ Open http://localhost:3000. Sign up, complete onboarding, create a payment link,
 
 1. Create an API user + key on the MoMo developer portal ([sandbox](https://sandbox.momodeveloper.mtn.com) / production) and enable the **Collection** product.
 2. Put the credentials in `.env.local` (see table above). Set `MTN_PAYEE_MSISDN` to the number your funds settle to, in country-code form (`2335xxxxxxxx`).
-3. Register the collection callback URL so payment/pre-approval outcomes reach Cowrie:
+3. Register the collection callback URL so payment/pre-approval outcomes reach Kivaro:
 
 ```
 https://<your-domain>/api/webhooks/mtn
@@ -93,7 +93,7 @@ Each due subscription is charged via the payer's approved pre-approval (no MoMo 
 
 ### Sandbox currency note
 
-The MTN **sandbox always processes in EUR** internally, regardless of the currency sent. Cowrie sends GHS; in production MTN honours GHS. Sandbox amounts map 1:1 for testing.
+The MTN **sandbox always processes in EUR** internally, regardless of the currency sent. Kivaro sends GHS; in production MTN honours GHS. Sandbox amounts map 1:1 for testing.
 
 ## Neon Auth setup
 

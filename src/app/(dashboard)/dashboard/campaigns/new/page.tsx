@@ -1,7 +1,7 @@
 import { getUserOrganizationSlug } from "@/lib/auth/org";
 import { NewCampaignForm } from "@/components/campaigns/NewCampaignForm";
 
-export const metadata = { title: "Start a campaign — Cowrie" };
+export const metadata = { title: "Start a campaign — Kivaro" };
 
 export default async function NewCampaignPage() {
   const orgSlug = await getUserOrganizationSlug();

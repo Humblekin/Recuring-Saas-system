@@ -164,7 +164,7 @@ export function OnboardingFlow({
         </h2>
         <p className="text-ink-muted mt-1">
           {step === "profile" && "A complete profile builds supporter trust."}
-          {step === "payments" && "Cowrie collects through MTN Mobile Money. Add the MTN MoMo API credentials on the server to start accepting payments."}
+          {step === "payments" && "Kivaro collects through MTN Mobile Money. Add the MTN MoMo API credentials on the server to start accepting payments."}
           {step === "link" && "Share it anywhere. Supporters give in two taps."}
         </p>
       </div>

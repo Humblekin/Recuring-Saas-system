@@ -2,7 +2,7 @@ import { getCampaigns } from "@/app/actions/campaigns";
 import { getUserOrganizationSlug } from "@/lib/auth/org";
 import { CampaignsClient } from "@/components/campaigns/CampaignsClient";
 
-export const metadata = { title: "Campaigns — Cowrie" };
+export const metadata = { title: "Campaigns — Kivaro" };
 
 export default async function CampaignsPage() {
   const [campaigns, orgSlug] = await Promise.all([getCampaigns(), getUserOrganizationSlug()]);

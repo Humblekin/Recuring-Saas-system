@@ -147,7 +147,7 @@ export function SettingsClient({
             <label htmlFor="org-slug" className="block text-sm font-medium mb-1.5">Public URL slug</label>
             <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
               <span className="text-sm font-mono text-ink-muted bg-cream px-3 py-3 border border-border rounded-xl">
-                cowrie/give/
+                kivaro/give/
               </span>
               <input id="org-slug" type="text" required value={slug} onChange={(e) => setSlug(e.target.value)} className={`${inputClass} font-mono`} />
             </div>

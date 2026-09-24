@@ -49,8 +49,8 @@ export default function CookiesPage() {
       <h2>5. Contact</h2>
       <p>
         Questions about this policy:{" "}
-        <a className="underline" href="mailto:support@cowrie.app">
-          support@cowrie.app
+        <a className="underline" href="mailto:support@kivaro.app">
+          support@kivaro.app
         </a>
         .
       </p>

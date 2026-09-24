@@ -127,7 +127,7 @@ export async function exportReportCsv(range: ReportRange = "all") {
   ].join("\n");
 
   return {
-    fileName: `cowrie-report-${organization.slug}-${Date.now()}.csv`,
+    fileName: `kivaro-report-${organization.slug}-${Date.now()}.csv`,
     csv,
   };
 }

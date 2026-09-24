@@ -12,16 +12,16 @@ export default function TermsPage() {
 
       <h2>1. About these terms</h2>
       <p>
-        These Terms of Service govern your use of the Cowrie platform. By creating
+        These Terms of Service govern your use of the Kivaro platform. By creating
         an account, accepting a contribution, or making a contribution, you agree
         to these terms. If you do not agree, please do not use the platform.
       </p>
 
       <h2>2. The platform</h2>
       <p>
-        Cowrie lets organizations publish payment links and campaigns and collect
+        Kivaro lets organizations publish payment links and campaigns and collect
         one-time or recurring contributions from supporters through MTN Mobile
-        Money (MTN MoMo). Cowrie is a technology provider and is not a party to the
+        Money (MTN MoMo). Kivaro is a technology provider and is not a party to the
         relationship between an organization and its supporters.
       </p>
 
@@ -51,7 +51,7 @@ export default function TermsPage() {
 
       <h2>5. Organization responsibilities</h2>
       <p>
-        Organizations using Cowrie agree to:
+        Organizations using Kivaro agree to:
       </p>
       <ul>
         <li>Use the platform only for lawful fundraising and charitable purposes.</li>
@@ -66,7 +66,7 @@ export default function TermsPage() {
       </p>
 
       <h2>6. Acceptable use</h2>
-      <p>You may not use Cowrie to:</p>
+      <p>You may not use Kivaro to:</p>
       <ul>
         <li>Violate any law or regulation.</li>
         <li>Attempt to gain unauthorized access to accounts, systems, or data.</li>
@@ -77,14 +77,14 @@ export default function TermsPage() {
 
       <h2>7. Fees</h2>
       <p>
-        Cowrie does not currently charge organizations a platform fee for
+        Kivaro does not currently charge organizations a platform fee for
         contributions. MTN Mobile Money transaction charges, if any, are applied
-        by MTN and are separate from Cowrie.
+        by MTN and are separate from Kivaro.
       </p>
 
       <h2>8. Intellectual property</h2>
       <p>
-        The Cowrie name, logo, and platform are owned by Cowrie. Organizations
+        The Kivaro name, logo, and platform are owned by Kivaro. Organizations
         retain ownership of their content, campaigns, and supporter relationships.
       </p>
 
@@ -92,7 +92,7 @@ export default function TermsPage() {
       <p>
         The platform is provided &ldquo;as is&rdquo; without warranties of any
         kind, whether express or implied. To the fullest extent permitted by law,
-        Cowrie is not liable for indirect, incidental, or consequential damages,
+        Kivaro is not liable for indirect, incidental, or consequential damages,
         or for the acts, omissions, or insolvency of any organization or of MTN.
       </p>
 
@@ -119,8 +119,8 @@ export default function TermsPage() {
       <h2>13. Contact</h2>
       <p>
         Questions about these terms:{" "}
-        <a className="underline" href="mailto:support@cowrie.app">
-          support@cowrie.app
+        <a className="underline" href="mailto:support@kivaro.app">
+          support@kivaro.app
         </a>
         .
       </p>

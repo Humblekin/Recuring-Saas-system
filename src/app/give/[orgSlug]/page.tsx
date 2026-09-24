@@ -16,10 +16,10 @@ export async function generateMetadata({
     where: eq(organizations.slug, orgSlug),
     columns: { name: true, description: true },
   });
-  if (!org) return { title: "Not found — Cowrie" };
+  if (!org) return { title: "Not found — Kivaro" };
   return {
-    title: `Giving to ${org.name} — Cowrie`,
-    description: org.description || `Support ${org.name} on Cowrie.`,
+    title: `Giving to ${org.name} — Kivaro`,
+    description: org.description || `Support ${org.name} on Kivaro.`,
   };
 }
 

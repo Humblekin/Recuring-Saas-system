@@ -2,7 +2,7 @@ import { getReportSummary, getSubscriptionReport } from "@/app/actions/reports";
 import { DownloadCsv } from "@/components/dashboard/DownloadCsv";
 import { formatCurrencyFromMinor } from "@/lib/utils";
 
-export const metadata = { title: "Reports — Cowrie" };
+export const metadata = { title: "Reports — Kivaro" };
 
 export default async function ReportsPage() {
   const [summary, subs] = await Promise.all([

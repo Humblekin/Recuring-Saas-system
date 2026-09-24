@@ -2,7 +2,7 @@ import { getPaymentLinks } from "@/app/actions/payment-links";
 import { getUserOrganizationSlug } from "@/lib/auth/org";
 import { PaymentLinksClient } from "@/components/payment-links/PaymentLinksClient";
 
-export const metadata = { title: "Payment links — Cowrie" };
+export const metadata = { title: "Payment links — Kivaro" };
 
 export default async function PaymentLinksPage() {
   const [links, orgSlug] = await Promise.all([getPaymentLinks(), getUserOrganizationSlug()]);

@@ -25,8 +25,8 @@ export async function generateMetadata({
         columns: { id: true, name: true },
       })
     : null;
-  if (!org || !link) return { title: "Not found — Cowrie" };
-  return { title: `${link.name} — ${org.name}`, description: `Give to ${link.name} on Cowrie.` };
+  if (!org || !link) return { title: "Not found — Kivaro" };
+  return { title: `${link.name} — ${org.name}`, description: `Give to ${link.name} on Kivaro.` };
 }
 
 export default async function GiveLinkPage({

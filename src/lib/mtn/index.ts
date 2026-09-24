@@ -33,7 +33,7 @@ export function logPay(...parts: unknown[]) {
 //   MTN_CURRENCY                 "GHS" (default). Sandbox transparently uses EUR.
 //
 // NOTE: the MTN sandbox wallet only accepts EUR (a request with GHS is
-// rejected with INVALID_CURRENCY). Cowrie stays "always GHS" product-facing:
+// rejected with INVALID_CURRENCY). Kivaro stays "always GHS" product-facing:
 // the DB and UI use GHS, and only the sandbox wire request is mapped to EUR.
 // Production honours MTN_CURRENCY (GHS). Amounts map 1:1.
 //
@@ -116,7 +116,7 @@ export function toMtnMajor(amountMinor: number): string {
   return Number.isInteger(major) ? String(major) : major.toFixed(2);
 }
 
-/** Map an MTN status to Cowrie's payment status. */
+/** Map an MTN status to Kivaro's payment status. */
 export function mtnStatusToLocal(status: string): "success" | "failed" | "pending" {
   if (status === "SUCCESSFUL") return "success";
   if (status === "FAILED" || status === "REJECTED" || status === "CANCELLED" || status === "TIMEOUT") return "failed";
@@ -203,8 +203,8 @@ export async function requestToPay(
     currency: wireCurrency(cfg),
     externalId: input.externalId,
     payer: { partyIdType: "MSISDN", partyId: normalizeMsisdn(input.payerMsisdn) },
-    payerMessage: input.payerMessage || "Contribution via Cowrie",
-    payeeNote: input.payeeNote || "Cowrie contribution",
+    payerMessage: input.payerMessage || "Contribution via Kivaro",
+    payeeNote: input.payeeNote || "Kivaro contribution",
   };
   if (cfg.callbackUrl) body.callbackUrl = cfg.callbackUrl;
 
@@ -252,7 +252,7 @@ export async function createPreApproval(
   const cfg = mtnConfig();
   const body: Record<string, unknown> = {
     payer: { partyIdType: "MSISDN", partyId: normalizeMsisdn(input.payerMsisdn) },
-    payerMessage: input.payerMessage || "Authorize recurring contributions via Cowrie",
+    payerMessage: input.payerMessage || "Authorize recurring contributions via Kivaro",
     payeeNote: input.payeeNote || "Recurring contributions",
     amount: toMtnMajor(input.amountMinor),
     currency: wireCurrency(cfg),
@@ -298,7 +298,7 @@ export async function requestToPayAgainstPreApproval(
     currency: wireCurrency(cfg),
     externalId: input.externalId,
     payer: { partyIdType: "MSISDN", partyId: normalizeMsisdn(input.payerMsisdn) },
-    payerMessage: input.payerMessage || "Recurring contribution via Cowrie",
+    payerMessage: input.payerMessage || "Recurring contribution via Kivaro",
     payeeNote: input.payeeNote || "Recurring contribution",
   };
   if (cfg.callbackUrl) body.callbackUrl = cfg.callbackUrl;

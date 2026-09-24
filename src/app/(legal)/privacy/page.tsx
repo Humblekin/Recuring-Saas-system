@@ -12,7 +12,7 @@ export default function PrivacyPage() {
 
       <h2>1. Who we are</h2>
       <p>
-        Cowrie is a fundraising platform that helps organizations in Ghana collect
+        Kivaro is a fundraising platform that helps organizations in Ghana collect
         one-time and recurring contributions through mobile money (MTN Mobile
         Money). This policy explains what personal data we collect, why we collect
         it, and how you can exercise your rights.
@@ -29,7 +29,7 @@ export default function PrivacyPage() {
       </p>
       <h3>2.2 Account data</h3>
       <p>
-        If you create a Cowrie account, we store your name, email address, and the
+        If you create a Kivaro account, we store your name, email address, and the
         organizations and campaigns you administer.
       </p>
       <h3>2.3 Technical data</h3>
@@ -107,8 +107,8 @@ export default function PrivacyPage() {
       <h2>9. Contact</h2>
       <p>
         For privacy questions or requests, contact us at{" "}
-        <a className="underline" href="mailto:support@cowrie.app">
-          support@cowrie.app
+        <a className="underline" href="mailto:support@kivaro.app">
+          support@kivaro.app
         </a>
         . If you believe your data has been mishandled, you may also lodge a
         complaint with the Data Protection Commission of Ghana.

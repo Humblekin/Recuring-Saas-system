@@ -53,7 +53,7 @@ export function GiveShell({
             <LogoMark size={14} />
           </div>
           <span className="text-lg tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
-            Cowrie
+            Kivaro
           </span>
         </Link>
       </header>

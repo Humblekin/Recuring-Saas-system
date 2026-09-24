@@ -1,7 +1,7 @@
 import { getUserOrganizationSlug } from "@/lib/auth/org";
 import { NewPaymentLinkForm } from "@/components/payment-links/NewPaymentLinkForm";
 
-export const metadata = { title: "Create payment link — Cowrie" };
+export const metadata = { title: "Create payment link — Kivaro" };
 
 export default async function NewPaymentLinkPage() {
   const orgSlug = await getUserOrganizationSlug();

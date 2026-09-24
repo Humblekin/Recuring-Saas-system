@@ -45,7 +45,7 @@ export async function GET(req: Request) {
       continue;
     }
 
-    const reference = `cowrie_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`.toLowerCase();
+    const reference = `kivaro_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`.toLowerCase();
 
     try {
       const { referenceId } = await requestToPayAgainstPreApproval(sub.mtnPreApprovalId, {
@@ -53,7 +53,7 @@ export async function GET(req: Request) {
         externalId: reference,
         payerMsisdn: sub.payerMsisdn,
         payerMessage: "Your recurring contribution",
-        payeeNote: "Recurring contribution via Cowrie",
+        payeeNote: "Recurring contribution via Kivaro",
       });
 
       // Insert the payment AND advance the billing date atomically — if either

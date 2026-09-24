@@ -4,7 +4,7 @@ import { getOrLinkUserRecord } from "@/lib/auth/org";
 import { getOrganizationSettings } from "@/app/actions/settings";
 import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
 
-export const metadata = { title: "Set up your organization — Cowrie" };
+export const metadata = { title: "Set up your organization — Kivaro" };
 
 export default async function OnboardingPage() {
   const session = await requireAuth();

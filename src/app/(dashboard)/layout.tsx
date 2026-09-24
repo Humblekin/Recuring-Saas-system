@@ -19,7 +19,7 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = (await headers()).get("x-cowrie-pathname") || "";
+  const pathname = (await headers()).get("x-kivaro-pathname") || "";
   const session = await requireAuth().catch(() => redirect("/login"));
   confirmSession(session);
 
@@ -53,7 +53,7 @@ export default async function DashboardLayout({
               <LogoMark size={18} />
             </div>
             <span className="text-xl tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
-              Cowrie
+              Kivaro
             </span>
           </a>
         </div>
@@ -85,7 +85,7 @@ export default async function DashboardLayout({
               <LogoMark size={15} />
             </div>
             <a href="/dashboard" className="text-lg tracking-tight text-ink no-underline" style={{ fontFamily: "var(--font-display)" }}>
-              Cowrie
+              Kivaro
             </a>
           </div>
 

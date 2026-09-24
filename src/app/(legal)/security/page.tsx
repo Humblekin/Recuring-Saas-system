@@ -10,7 +10,7 @@ export default function SecurityPage() {
       <h1>Security</h1>
       <p>Last updated: 23 September 2026.</p>
       <p>
-        Cowrie handles financial contributions, so security is core to how we
+        Kivaro handles financial contributions, so security is core to how we
         build. Here is what we do to protect supporters, organizations, and data.
       </p>
 
@@ -59,8 +59,8 @@ export default function SecurityPage() {
       <h2>7. Reporting a vulnerability</h2>
       <p>
         Found a security issue? Please contact us at{" "}
-        <a className="underline" href="mailto:security@cowrie.app">
-          security@cowrie.app
+        <a className="underline" href="mailto:security@kivaro.app">
+          security@kivaro.app
         </a>{" "}
         and do not disclose the issue publicly until it has been resolved. We thank
         responsible researchers.

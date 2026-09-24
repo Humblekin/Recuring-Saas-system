@@ -1,7 +1,7 @@
 import { getTeamMembers } from "@/app/actions/team";
 import { TeamClient } from "@/components/team/TeamClient";
 
-export const metadata = { title: "Team — Cowrie" };
+export const metadata = { title: "Team — Kivaro" };
 
 export default async function TeamPage() {
   const { members, currentUserId, role, inviteUrl } = await getTeamMembers();

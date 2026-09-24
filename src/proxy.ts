@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 // =============================================================================
-// COWRIE — Security Middleware
+// KIVARO — Security Middleware
 // =============================================================================
 // Handles: route protection, rate limiting headers, CSRF defense
 // =============================================================================
@@ -23,7 +23,7 @@ export function proxy(request: NextRequest) {
   // Expose the request path to layouts/server components. The (dashboard)
   // layout uses it to avoid redirecting /dashboard/onboarding to itself
   // (which would cause an infinite redirect loop).
-  request.headers.set("x-cowrie-pathname", pathname);
+  request.headers.set("x-kivaro-pathname", pathname);
   const response = NextResponse.next({ request });
 
   // --- CSRF Protection ---

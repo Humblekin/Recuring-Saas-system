@@ -163,7 +163,7 @@ export async function processCheckout(data: {
   }
 
   // 8. Build the payment + provider references (amount stored in pesewas)
-  const reference = `cowrie_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`.toLowerCase();
+  const reference = `kivaro_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`.toLowerCase();
   const amountInPesewas = Math.round(data.amount * 100);
   const payerMsisdn = normalizeMsisdn(data.phone);
 
@@ -193,7 +193,7 @@ export async function processCheckout(data: {
           externalId: reference,
           payerMsisdn,
           payerMessage: "Your contribution to " + org.name,
-          payeeNote: "Cowrie contribution to " + org.name,
+          payeeNote: "Kivaro contribution to " + org.name,
         },
         referenceId
       );

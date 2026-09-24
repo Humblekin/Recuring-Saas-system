@@ -23,7 +23,7 @@ export async function generateMetadata({
         columns: { id: true, title: true, description: true },
       })
     : null;
-  if (!org || !campaign) return { title: "Not found — Cowrie" };
+  if (!org || !campaign) return { title: "Not found — Kivaro" };
   return {
     title: `${campaign.title} — ${org.name}`,
     description: campaign.description || `Support ${campaign.title}.`,
