@@ -70,7 +70,7 @@ export default function TrustStrip() {
     <section className="py-12 md:py-16 border-b border-border overflow-hidden">
       <div
         ref={stripRef}
-        className="section-container flex flex-col md:flex-row items-center justify-between gap-6 opacity-0"
+        className="section-container flex flex-col md:flex-row items-center justify-between gap-6"
       >
         <p className="text-ink font-medium text-center md:text-left md:whitespace-nowrap">
           Built for organizations collecting from many people.

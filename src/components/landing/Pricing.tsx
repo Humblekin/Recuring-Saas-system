@@ -115,7 +115,7 @@ export default function Pricing() {
               )}
             <div 
               ref={(el) => { cardsRef.current[index] = el; }}
-              className={`relative flex flex-col p-8 rounded-3xl transition-all duration-300 opacity-0 hover:-translate-y-1 ${
+              className={`relative flex flex-col p-8 rounded-3xl transition-all duration-300 hover:-translate-y-1 ${
                 tier.highlight 
                   ? "bg-surface border-2 border-ink shadow-card" 
                   : "bg-surface border border-border shadow-subtle hover:border-ink-muted"

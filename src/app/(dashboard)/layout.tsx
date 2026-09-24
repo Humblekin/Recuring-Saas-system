@@ -1,14 +1,13 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
-import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
 import { requireAuth } from "@/lib/auth/server";
+import { getOrLinkUserRecord } from "@/lib/auth/org";
 import { NavLinks } from "@/components/dashboard/NavLinks";
 import { NotificationsBell } from "@/components/dashboard/NotificationsBell";
 import { SignOutButton } from "@/components/dashboard/SignOutButton";
 import { EmailVerificationNotice } from "@/components/dashboard/EmailVerificationNotice";
 import { LogoMark } from "@/components/ui/icons";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import {
   getUnreadNotificationCount,
   getNotificationsFeed,
@@ -24,28 +23,25 @@ export default async function DashboardLayout({
   const session = await requireAuth().catch(() => redirect("/login"));
   confirmSession(session);
 
-  const user = await db.query.users.findFirst({
-    where: eq(users.neonAuthId, session.user.id),
-  });
+  // Resolve the local users row for this session. This also repairs drifted
+  // Neon Auth ids (re-linking by email) and auto-provisions brand-new accounts,
+  // so a signed-in user is never stranded on /register.
+  const localUser = await getOrLinkUserRecord(session);
 
-  // No local account record → user must create or join an organization first.
-  if (!user) {
+  // Users with a Neon account but no local record (insert genuinely failed)
+  // must create or join an organization first.
+  if (!localUser) {
     redirect("/register");
   }
   // Users with no organization are sent through onboarding — EXCEPT when they
   // are already on the onboarding page. redirect() to the same route would
   // cycle forever (ERR_TOO_MANY_REDIRECTS); the onboarding page handles the
   // no-org case itself (it redirects to /register).
-  if (!user.organizationId) {
+  if (!localUser.organizationId) {
     if (pathname !== "/dashboard/onboarding") {
       redirect("/dashboard/onboarding");
     }
   }
-
-  const [unreadCount, feed] = await Promise.all([
-    getUnreadNotificationCount().catch(() => 0),
-    getNotificationsFeed().catch(() => []),
-  ]);
 
   return (
     <div className="min-h-screen bg-cream flex flex-col md:flex-row">
@@ -67,13 +63,13 @@ export default async function DashboardLayout({
         <div className="p-4 border-t border-border space-y-1">
           <div className="flex items-center gap-3 px-3 py-2">
             <div className="w-8 h-8 bg-terracotta/10 text-terracotta rounded-full flex items-center justify-center font-medium text-sm flex-shrink-0">
-              {(user.name || session.user.name || "O").charAt(0).toUpperCase()}
+              {(localUser.name || session.user.name || "O").charAt(0).toUpperCase()}
             </div>
             <div className="overflow-hidden min-w-0">
               <div className="text-sm font-medium text-ink truncate">
-                {user.name || session.user.name || "You"}
+                {localUser.name || session.user.name || "You"}
               </div>
-              <div className="text-xs text-ink-muted truncate">{user.email || session.user.email}</div>
+              <div className="text-xs text-ink-muted truncate">{localUser.email || session.user.email}</div>
             </div>
           </div>
           <SignOutButton />
@@ -96,23 +92,16 @@ export default async function DashboardLayout({
           <h1 className="hidden md:block text-lg font-medium">Dashboard</h1>
 
           <div className="flex items-center gap-3 flex-shrink-0">
+            <ThemeToggle />
             <NotificationsBell
-              initialCount={unreadCount}
-              initialItems={feed.map((n) => ({
-                id: n.id,
-                type: n.type,
-                title: n.title,
-                message: n.message,
-                readAt: n.readAt ? n.readAt.toISOString() : null,
-                createdAt: n.createdAt.toISOString(),
-                payload: (n.payload || {}) as Record<string, unknown>,
-              }))}
+              initialCount={0}
+              initialItems={[]}
               loadCount={getUnreadNotificationCount}
               loadItems={getNotificationsFeed}
               markRead={markAllNotificationsRead}
             />
             <div className="w-8 h-8 bg-terracotta/10 text-terracotta rounded-full flex items-center justify-center font-medium text-sm md:hidden">
-              {(user.name || session.user.name || "O").charAt(0).toUpperCase()}
+              {(localUser.name || session.user.name || "O").charAt(0).toUpperCase()}
             </div>
           </div>
         </header>

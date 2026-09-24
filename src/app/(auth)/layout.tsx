@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 export const metadata: Metadata = {
   title: "Sign in — Kivaro",
@@ -80,6 +81,9 @@ export default function AuthLayout({
           className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-terracotta/10 blur-3xl animate-glow pointer-events-none"
           style={{ animationDelay: "-2s" }}
         ></div>
+        <div className="absolute top-6 right-6">
+          <ThemeToggle />
+        </div>
         <div className="relative w-full max-w-md">{children}</div>
       </div>
     </div>

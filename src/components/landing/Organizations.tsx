@@ -108,7 +108,7 @@ export default function Organizations() {
           {/* --- Left Column: Large Editorial Photography --- */}
           <div 
             ref={imageRef}
-            className="relative w-full h-[300px] sm:h-[420px] md:h-[500px] lg:h-[700px] rounded-3xl overflow-hidden bg-border/50 shadow-sm opacity-0"
+            className="relative w-full h-[300px] sm:h-[420px] md:h-[500px] lg:h-[700px] rounded-3xl overflow-hidden bg-border/50 shadow-sm"
           >
             <div ref={parallaxRef} className="absolute -inset-y-[10%] inset-x-0">
               <Image 
@@ -131,7 +131,7 @@ export default function Organizations() {
               {ORGS.map((org, index) => (
                 <div 
                   key={org.title} 
-                  className={`py-6 flex flex-col sm:flex-row sm:items-baseline gap-2 sm:gap-8 opacity-0 ${
+                  className={`py-6 flex flex-col sm:flex-row sm:items-baseline gap-2 sm:gap-8 ${
                     index !== 0 ? "border-t border-border" : ""
                   }`}
                 >

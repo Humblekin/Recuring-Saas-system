@@ -98,7 +98,7 @@ export default function CampaignsQR() {
           <div className="order-2 lg:order-1 relative perspective-1000">
             <div
               ref={cardRef}
-              className="relative bg-cream rounded-3xl border border-border shadow-elevated p-6 sm:p-8 max-w-md mx-auto opacity-0"
+              className="relative bg-cream rounded-3xl border border-border shadow-elevated p-6 sm:p-8 max-w-md mx-auto"
             >
               <div className="flex justify-between items-start mb-6">
                 <div>
@@ -180,7 +180,7 @@ export default function CampaignsQR() {
                   <li 
                     key={i} 
                     ref={(el) => { itemsRef.current[i] = el; }}
-                    className="flex items-center gap-2 text-ink opacity-0"
+                    className="flex items-center gap-2 text-ink"
                   >
                     <div className="w-1 h-1 rounded-full bg-terracotta"></div>
                     {item}
@@ -191,7 +191,7 @@ export default function CampaignsQR() {
               {/* Context Photograph */}
               <div 
                 ref={imageRef}
-                className="relative w-full sm:w-48 h-48 rounded-2xl overflow-hidden border border-border shadow-sm shrink-0 bg-border/50 opacity-0"
+                className="relative w-full sm:w-48 h-48 rounded-2xl overflow-hidden border border-border shadow-sm shrink-0 bg-border/50"
               >
                 <Image 
                   src="/images/landing/campaign.jpg" 

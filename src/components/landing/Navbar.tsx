@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 // =============================================================================
 // NAVBAR — Sticky, shrinks on scroll, mobile menu
@@ -127,6 +128,8 @@ export default function Navbar() {
               </a>
             ))}
 
+            <ThemeToggle />
+
             <Link
               href="/login"
               className="text-sm font-medium transition-colors duration-300 no-underline text-ink-muted hover:text-ink"
@@ -212,6 +215,10 @@ export default function Navbar() {
                 transition={{ delay: 0.3 }}
                 className="pt-4 border-t border-border flex flex-col gap-4"
               >
+                <div className="flex items-center justify-between">
+                  <ThemeToggle />
+                </div>
+
                 <Link
                   href="/login"
                   className="text-2xl no-underline text-ink transition-colors"

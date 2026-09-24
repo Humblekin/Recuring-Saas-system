@@ -149,7 +149,7 @@ function StatusCard({
 
         <Link
           href="/"
-          className="block w-full py-3 rounded-xl text-cream font-medium no-underline"
+          className="block w-full py-3 rounded-xl text-white font-medium no-underline"
           style={{ backgroundColor: accent }}
         >
           Done

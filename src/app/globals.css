@@ -7,23 +7,25 @@
 
 /* --- Tailwind v4 Theme Configuration --- */
 @theme {
-  /* --- Colors --- */
-  --color-cream: #FDFBF7;
-  --color-cream-dark: #F7F3EC;
-  --color-ivory: #FAF7F2;
-  --color-ink: #1A1A1A;
-  --color-ink-light: #4A4A4A;
-  --color-ink-muted: #6B6560;
-  --color-terracotta: #C4603C;
-  --color-terracotta-dark: #A84E30;
-  --color-terracotta-light: #D4785A;
-  --color-surface: #FFFFFF;
-  --color-border: #E8E4DE;
-  --color-border-light: #F0EDE8;
-  --color-muted: #9B9590;
-  --color-success: #2D7A4F;
-  --color-warning: #C4893C;
-  --color-error: #C43C3C;
+  /* --- Colors (dark is the global default theme) --- */
+  --color-cream: #070c0a;
+  --color-cream-dark: #090f0c;
+  --color-ivory: #0b1310;
+  --color-ink: #e9f0ea;
+  --color-ink-light: #cfdcd3;
+  --color-ink-muted: #a5b6aa;
+  --color-terracotta: #2fbe6f;
+  --color-terracotta-dark: #27a45f;
+  --color-terracotta-light: #4ed68a;
+  --color-surface: #101a15;
+  --color-border: #1d2b24;
+  --color-border-light: #253530;
+  --color-muted: #687970;
+  --color-success: #2fbe6f;
+  --color-warning: #d9a441;
+  --color-error: #e06a6a;
+  --color-gold: #FFC825;
+  --color-gold-dark: #E5A800;
 
   /* --- Typography --- */
   --font-display: 'Fraunces', 'Georgia', serif;
@@ -41,10 +43,10 @@
   --radius-xl: 16px;
 
   /* --- Shadows --- */
-  --shadow-subtle: 0 1px 3px rgba(26, 26, 26, 0.04);
-  --shadow-card: 0 2px 8px rgba(26, 26, 26, 0.06);
-  --shadow-elevated: 0 4px 16px rgba(26, 26, 26, 0.08);
-  --shadow-product: 0 8px 32px rgba(26, 26, 26, 0.1);
+  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-card: 0 2px 10px rgba(0, 0, 0, 0.45);
+  --shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-product: 0 16px 48px rgba(0, 0, 0, 0.55);
 
   /* --- Transitions --- */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -57,6 +59,46 @@
   --breakpoint-lg: 1024px;
   --breakpoint-xl: 1280px;
   --breakpoint-2xl: 1440px;
+}
+
+/* =============================================================================
+   THEMES — Dark is the global default (set on `:root` from `@theme` above).
+   The optional light theme activates when the ThemeProvider / bootstrap
+   script sets <html data-theme="light">. Every color utility resolves
+   var(--color-*) at the element, so a single attribute switch restyles the
+   entire app (landing, auth, and dashboard alike).
+   ============================================================================= */
+
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --color-cream: #FDFBF7;
+  --color-cream-dark: #F7F3EC;
+  --color-ivory: #FAF7F2;
+  --color-ink: #1A1A1A;
+  --color-ink-light: #4A4A4A;
+  --color-ink-muted: #6B6560;
+  --color-terracotta: #C4603C;
+  --color-terracotta-dark: #A84E30;
+  --color-terracotta-light: #D4785A;
+  --color-surface: #FFFFFF;
+  --color-border: #E8E4DE;
+  --color-border-light: #F0EDE8;
+  --color-muted: #9B9590;
+  --color-success: #2D7A4F;
+  --color-warning: #C4893C;
+  --color-error: #C43C3C;
+  --color-gold: #FFC825;
+  --color-gold-dark: #E5A800;
+
+  --shadow-subtle: 0 1px 3px rgba(26, 26, 26, 0.04);
+  --shadow-card: 0 2px 8px rgba(26, 26, 26, 0.06);
+  --shadow-elevated: 0 4px 16px rgba(26, 26, 26, 0.08);
+  --shadow-product: 0 8px 32px rgba(26, 26, 26, 0.1);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
 }
 
 /* =============================================================================
@@ -375,58 +417,34 @@
 }
 
 /* =============================================================================
-   LANDING (KIVARO) — Scoped dark palette
-   Deep green-black base with controlled green accents. Overrides live only on
-   `.lp`, so dashboard/auth keep the shared cream theme: Tailwind v4 utilities
-   resolve var(--color-*) at the element, inheriting this scope.
+   THEME-SCOPED COMPONENT RULES
+   Dark theme tweaks (default): green primary buttons, readable form text and
+   selection. The light theme keeps the base component styles unchanged.
    ============================================================================= */
 
-.lp {
-  --color-cream: #070c0a;
-  --color-cream-dark: #090f0c;
-  --color-ivory: #0b1310;
-  --color-ink: #e9f0ea;
-  --color-ink-light: #b6c3bb;
-  --color-ink-muted: #8a9990;
-  --color-terracotta: #2fbe6f;
-  --color-terracotta-dark: #27a45f;
-  --color-terracotta-light: #4ed68a;
-  --color-surface: #101a15;
-  --color-border: #1d2b24;
-  --color-border-light: #253530;
-  --color-muted: #687970;
-  --color-success: #2fbe6f;
-  --color-warning: #d9a441;
-  --color-error: #e06a6a;
-  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.4);
-  --shadow-card: 0 2px 10px rgba(0, 0, 0, 0.45);
-  --shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.5);
-  --shadow-product: 0 16px 48px rgba(0, 0, 0, 0.55);
-}
-
 @layer components {
-  .lp .btn-primary {
+  [data-theme="dark"] .btn-primary {
     background-color: var(--color-terracotta);
     color: #051009;
   }
 
-  .lp .btn-primary:hover {
+  [data-theme="dark"] .btn-primary:hover {
     background-color: var(--color-terracotta-light);
     color: #051009;
   }
 
-  .lp input,
-  .lp textarea,
-  .lp select {
+  [data-theme="dark"] input,
+  [data-theme="dark"] textarea,
+  [data-theme="dark"] select {
     color: var(--color-ink);
   }
 
-  .lp input::placeholder,
-  .lp textarea::placeholder {
+  [data-theme="dark"] input::placeholder,
+  [data-theme="dark"] textarea::placeholder {
     color: var(--color-ink-muted);
   }
 
-  .lp ::selection {
+  [data-theme="dark"] ::selection {
     background-color: var(--color-terracotta);
     color: #051009;
   }

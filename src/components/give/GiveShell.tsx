@@ -62,7 +62,7 @@ export function GiveShell({
         <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-10">
           <div>
             <div
-              className="w-14 h-14 rounded-2xl flex items-center justify-center text-cream text-xl font-semibold mb-6"
+              className="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-xl font-semibold mb-6"
               style={{ backgroundColor: accent }}
             >
               {org.name.charAt(0).toUpperCase()}

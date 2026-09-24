@@ -208,15 +208,15 @@ export function SettingsClient({
             </p>
           </div>
 
-          <div className={cn("p-4 rounded-xl border text-sm", payments.configured ? "bg-green-50 border-green-200 text-green-700" : "bg-yellow-50 border-yellow-200 text-yellow-800")}>
+          <div className={cn("p-4 rounded-xl border text-sm", payments.configured ? "bg-success/10 border-success/30 text-success" : "bg-warning/10 border-warning/30 text-warning")}>
             {payments.configured ? (
               <>MTN MoMo is connected (<strong>{payments.mode}</strong> mode). Set the collection callback URL to{" "}
-                <code className="text-xs bg-white/60 border border-green-200 px-1.5 py-0.5 rounded">https://&lt;your-domain&gt;/api/webhooks/mtn</code>{" "}
+                <code className="text-xs bg-surface border border-border px-1.5 py-0.5 rounded">https://&lt;your-domain&gt;/api/webhooks/mtn</code>{" "}
                 in the MTN MoMo developer portal to receive payment notifications.</>
             ) : (
               <>
                 Payment processing is not set up yet. {payments.error || "Add MTN MoMo credentials to continue."}{" "}
-                Webhook URL: <code className="text-xs bg-white/60 border border-yellow-200 px-1.5 py-0.5 rounded">https://&lt;your-domain&gt;/api/webhooks/mtn</code>
+                Webhook URL: <code className="text-xs bg-surface border border-border px-1.5 py-0.5 rounded">https://&lt;your-domain&gt;/api/webhooks/mtn</code>
               </>
             )}
           </div>

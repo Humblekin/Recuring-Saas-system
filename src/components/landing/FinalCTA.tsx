@@ -84,16 +84,16 @@ export default function FinalCTA() {
       <div className="section-container relative z-10">
         <div
           ref={contentRef}
-          className="relative max-w-3xl text-center mx-auto opacity-0"
+          className="relative max-w-3xl text-center mx-auto"
         >
           {/* Soft animated glow behind the message */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[34rem] h-[34rem] rounded-full bg-terracotta/20 blur-3xl animate-glow pointer-events-none -z-10"></div>
 
-          <h2 className="text-4xl md:text-5xl lg:text-6xl text-ink mb-6">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl text-white mb-6">
             Start collecting, properly.
           </h2>
 
-          <p className="text-xl md:text-2xl text-ink-light mb-10 text-balance leading-relaxed">
+          <p className="text-xl md:text-2xl text-white/85 mb-10 text-balance leading-relaxed">
             Give your organization one place to collect, manage, and understand every contribution.
           </p>
 
@@ -101,7 +101,7 @@ export default function FinalCTA() {
             <Link href="/register" className="btn-primary w-full sm:w-auto text-lg py-4 px-8 inline-block text-center no-underline">
               Get Started
             </Link>
-            <a href="#how-it-works" className="btn-secondary border-white/30 hover:border-white hover:bg-white/10 w-full sm:w-auto text-lg py-4 px-8">
+            <a href="#how-it-works" className="btn-secondary border-white/30 hover:border-white hover:bg-white/10 w-full sm:w-auto text-lg py-4 px-8 text-white">
               See How It Works
             </a>
           </div>

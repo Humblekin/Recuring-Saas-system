@@ -431,7 +431,7 @@ export function GiveForm({
       <button
         type="submit"
         disabled={submitting}
-        className="w-full py-3.5 rounded-xl text-cream font-medium text-base transition-colors disabled:opacity-60"
+        className="w-full py-3.5 rounded-xl text-white font-medium text-base transition-colors disabled:opacity-60"
         style={{ backgroundColor: accentColor }}
       >
         {submitting
