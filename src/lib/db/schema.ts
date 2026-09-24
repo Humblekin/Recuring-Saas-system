@@ -96,7 +96,7 @@ export const campaigns = pgTable(
     organizationId: uuid('organization_id')
       .references(() => organizations.id)
       .notNull(),
-    paymentLinkId: uuid('payment_link_id').references(() => paymentLinks.id),
+    paymentLinkId: uuid('payment_link_id').references(() => paymentLinks.id, { onDelete: 'set null' }),
     title: text('title').notNull(),
     slug: text('slug').notNull(),
     description: text('description'),
@@ -131,10 +131,10 @@ export const payments = pgTable(
     organizationId: uuid('organization_id')
       .references(() => organizations.id)
       .notNull(),
-    paymentLinkId: uuid('payment_link_id').references(() => paymentLinks.id),
-    campaignId: uuid('campaign_id').references(() => campaigns.id),
+    paymentLinkId: uuid('payment_link_id').references(() => paymentLinks.id, { onDelete: 'set null' }),
+    campaignId: uuid('campaign_id').references(() => campaigns.id, { onDelete: 'set null' }),
     supporterId: uuid('supporter_id').references(() => supporters.id),
-    subscriptionId: uuid('subscription_id').references(() => subscriptions.id),
+    subscriptionId: uuid('subscription_id').references(() => subscriptions.id, { onDelete: 'set null' }),
     amount: integer('amount').notNull(),
     currency: text('currency').default('GHS'),
     status: text('status').notNull(), // 'pending', 'success', 'failed', 'refunded'
@@ -161,8 +161,8 @@ export const subscriptions = pgTable(
       .references(() => organizations.id)
       .notNull(),
     supporterId: uuid('supporter_id').references(() => supporters.id).notNull(),
-    paymentLinkId: uuid('payment_link_id').references(() => paymentLinks.id),
-    campaignId: uuid('campaign_id').references(() => campaigns.id),
+    paymentLinkId: uuid('payment_link_id').references(() => paymentLinks.id, { onDelete: 'set null' }),
+    campaignId: uuid('campaign_id').references(() => campaigns.id, { onDelete: 'set null' }),
     // MTN MoMo Pre-Approval id created at checkout; the payer authorizes this
     // in their MoMo app before the subscription can be charged automatically.
     mtnPreApprovalId: text('mtn_pre_approval_id'),

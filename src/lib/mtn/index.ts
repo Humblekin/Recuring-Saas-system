@@ -1,6 +1,16 @@
 import crypto from "node:crypto";
 
 // =============================================================================
+// Safe payment tracing. Logs only non-secret facts (paths, HTTP codes, public
+// reference ids, statuses). NEVER include tokens, keys, Basic/Bearer headers,
+// subscription keys, or API user/secret values here.
+// =============================================================================
+export function logPay(...parts: unknown[]) {
+  if (process.env.NODE_ENV === "production") return;
+  console.log("[KIVARO PAYMENT]", ...parts.map((p) => (typeof p === "string" ? p : JSON.stringify(p))));
+}
+
+// =============================================================================
 // MTN MOBILE MONEY — COLLECTION API (server-side)
 // =============================================================================
 // Thin, typo-safe wrapper around the official MTN MoMo Collection product:
@@ -94,8 +104,9 @@ export function normalizeMsisdn(value: string): string {
 }
 
 export function isValidMsisdn(value: string): boolean {
-  const d = value.replace(/\D+/g, "");
-  // Accept "02xxxxxxxxx", "233xxxxxxxxx", "+233xxxxxxxxx".
+  // Accept "02xxxxxxxxx", "233xxxxxxxxx", "+233xxxxxxxxx" — normalize first so
+  // every format the giveaway form advertises (e.g. "024 123 4567") passes.
+  const d = normalizeMsisdn(value);
   return d.length === 12 && d.startsWith("233");
 }
 
@@ -131,12 +142,13 @@ async function getAccessToken(): Promise<string> {
     },
     cache: "no-store",
   });
-
+  logPay("auth token request:", res.status);
   if (!res.ok) {
     throw new MtnApiError(`MTN token request failed (${res.status})`, res.status, await res.text());
   }
 
   const data = (await res.json()) as { access_token: string; expires_in?: number };
+  logPay("auth token obtained");
   // Default 1 hour; expire slightly early so concurrent calls re-fetch safely.
   const expiresIn = (data.expires_in || 3600) * 1000;
   accessTokenCache = { token: data.access_token, expiresAt: Date.now() + expiresIn };
@@ -153,6 +165,7 @@ async function apiFetch(path: string, init: RequestInit = {}) {
   if (init.body) headers.set("Content-Type", "application/json");
 
   const res = await fetch(`${cfg.baseUrl}${path}`, { ...init, headers, cache: "no-store" });
+  logPay("provider call:", init.method || "GET", path, "->", res.status);
   if (!res.ok) {
     const body = await res.text();
     throw new MtnApiError(`MTN API error on ${path} (${res.status})`, res.status, body);
@@ -200,6 +213,7 @@ export async function requestToPay(
     headers: { "X-Reference-Id": referenceId },
     body: JSON.stringify(body),
   });
+  logPay("one-time charge accepted (202) referenceId:", referenceId, "externalId:", input.externalId, "amount:", body.amount, body.currency);
   return { referenceId };
 }
 
@@ -251,6 +265,7 @@ export async function createPreApproval(
     headers: { "X-Reference-Id": preApprovalId },
     body: JSON.stringify(body),
   });
+  logPay("preapproval accepted (202) preApprovalId:", preApprovalId, "amount:", body.amount, body.currency);
   return { preApprovalId };
 }
 
@@ -293,6 +308,7 @@ export async function requestToPayAgainstPreApproval(
     headers: { "X-Reference-Id": referenceId },
     body: JSON.stringify(body),
   });
+  logPay("recurring auto-debit accepted (202) referenceId:", referenceId, "amount:", body.amount, body.currency);
   return { referenceId };
 }
 

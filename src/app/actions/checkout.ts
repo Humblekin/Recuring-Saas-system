@@ -17,6 +17,7 @@ import {
   getPreApprovalStatus,
   getTransactionStatus,
   isValidMsisdn,
+  logPay,
   mtnConfigMissing,
   mtnStatusToLocal,
   normalizeMsisdn,
@@ -178,6 +179,8 @@ export async function processCheckout(data: {
     paymentMethod: "mtn_momo",
   });
 
+  logPay("payment created pending:", { reference, org: org.slug, amountGHS: data.amount, type: data.mode, frequency: data.frequency || null });
+
   const receiptPath = `/give/${org.slug}/callback`;
 
   try {
@@ -255,6 +258,8 @@ export async function processCheckout(data: {
       .update(payments)
       .set({ status: "failed" })
       .where(eq(payments.reference, reference));
+    const msg = err instanceof Error ? err.message : String(err);
+    logPay("provider request failed, payment marked failed:", { reference, org: org.slug, error: msg.slice(0, 160) });
     throw err;
   }
 }
@@ -285,8 +290,15 @@ async function checkOneTimeStatus(referenceId: string): Promise<MomoStatusResult
     return { status: "pending", paymentReference: referenceId };
   }
 
+  // Success is terminal — mirror the webhook guard so a poll arriving late (or
+  // an MTN status flip) can never regress an already-settled payment.
+  if (payment.status === "success") {
+    return { status: "success", paymentReference: payment.reference };
+  }
+
   const tx = await getTransactionStatus(referenceId);
   const local = mtnStatusToLocal(tx.status);
+  logPay("one-time status poll:", { referenceId, mtnStatus: tx.status, local, db: payment.status });
 
   if (local !== "pending" && payment.status !== local) {
     await db
@@ -334,8 +346,11 @@ async function checkRecurringStatus(preApprovalId: string): Promise<MomoStatusRe
 
   const ps = await getPreApprovalStatus(preApprovalId);
   const local = mtnStatusToLocal(ps.status);
+  logPay("recurring status poll:", { preApprovalId, mtnStatus: ps.status, local, db: subscription.status });
   const pendingPayment = subscription.payments.find((p) => p.status === "pending");
 
+  // Active is terminal for the consent — return early so a transient PENDING
+  // from MTN (or a replay) never flips an authorized subscription backwards.
   if (local === "success" && subscription.status === "pending_authorization") {
     const now = new Date();
     await db
