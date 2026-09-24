@@ -3,7 +3,8 @@
 import { useState, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { signIn, isGoogleSignInEnabled } from "@/lib/auth/client";
+import { signIn, isGoogleSignInEnabled, isEmailNotVerifiedError } from "@/lib/auth/client";
+import { VerifyEmailStep } from "@/components/auth/VerifyEmailStep";
 
 export default function LoginPage({
   searchParams,
@@ -18,6 +19,10 @@ export default function LoginPage({
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [resetComplete] = useState(reset === "complete");
+  const [pendingVerify, setPendingVerify] = useState<{
+    email: string;
+    password: string;
+  } | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -28,6 +33,11 @@ export default function LoginPage({
       const result = await signIn.email({ email, password });
 
       if (result.error) {
+        if (isEmailNotVerifiedError(result.error)) {
+          setPendingVerify({ email, password });
+          setLoading(false);
+          return;
+        }
         setError(result.error.message || "Invalid email or password.");
         setLoading(false);
         return;
@@ -102,7 +112,29 @@ export default function LoginPage({
         </div>
       )}
 
-      {isGoogleSignInEnabled() && (
+      {pendingVerify ? (
+        <VerifyEmailStep
+          email={pendingVerify.email}
+          onBack={() => setPendingVerify(null)}
+          onVerified={async () => {
+            const result = await signIn.email({
+              email: pendingVerify.email,
+              password: pendingVerify.password,
+            });
+            if (result.error) {
+              setError(
+                "Email verified. Sign in with your email and password."
+              );
+              setPendingVerify(null);
+              return;
+            }
+            router.push("/dashboard");
+            router.refresh();
+          }}
+        />
+      ) : (
+        <>
+          {isGoogleSignInEnabled() && (
         <>
           <button
             type="button"
@@ -190,6 +222,8 @@ export default function LoginPage({
           Create one
         </Link>
       </p>
+        </>
+      )}
     </div>
   );
 }

@@ -3,7 +3,8 @@
 import { useState, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { signUp, signIn, isGoogleSignInEnabled } from "@/lib/auth/client";
+import { signUp, signIn, useSession, isGoogleSignInEnabled, isEmailNotVerifiedError } from "@/lib/auth/client";
+import { VerifyEmailStep } from "@/components/auth/VerifyEmailStep";
 
 export default function RegisterPage({
   searchParams,
@@ -12,12 +13,22 @@ export default function RegisterPage({
 }) {
   const { invite } = use(searchParams);
   const router = useRouter();
+  const { data: session } = useSession();
+  // Already signed in (Google OAuth, or an email account whose provisioning
+  // previously failed). /register doubles as the org-setup funnel for these —
+  // skip account creation and go straight to org provisioning.
+  const isAuthenticated = Boolean(session?.user);
   const [orgName, setOrgName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [pendingVerify, setPendingVerify] = useState<{
+    orgName: string;
+    email: string;
+    password: string;
+  } | null>(null);
 
   function generateSlug(name: string): string {
     return name
@@ -27,11 +38,29 @@ export default function RegisterPage({
       .slice(0, 60);
   }
 
+  async function createOrganization(orgNameArg: string, inviteArg: string | undefined) {
+    const slug = generateSlug(orgNameArg);
+    const res = await fetch("/api/organizations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(
+        inviteArg
+          ? { inviteToken: inviteArg }
+          : { name: orgNameArg, slug }
+      ),
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || "Failed to create organization.");
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
 
-    if (password.length < 8) {
+    if (!isAuthenticated && password.length < 8) {
       setError("Password must be at least 8 characters.");
       return;
     }
@@ -39,40 +68,32 @@ export default function RegisterPage({
     setLoading(true);
 
     try {
-      const result = await signUp.email({
-        email,
-        password,
-        name: orgName,
-      });
+      if (!isAuthenticated) {
+        const result = await signUp.email({
+          email,
+          password,
+          name: orgName,
+        });
 
-      if (result.error) {
-        setError(result.error.message || "Registration failed. Please try again.");
-        setLoading(false);
-        return;
+        if (result.error) {
+          // The account was created but Better Auth is waiting for the user to
+          // confirm their email — show the code-entry step instead of failing.
+          if (isEmailNotVerifiedError(result.error)) {
+            setPendingVerify({ orgName, email, password });
+            setLoading(false);
+            return;
+          }
+          setError(result.error.message || "Registration failed. Please try again.");
+          setLoading(false);
+          return;
+        }
       }
 
-      const slug = generateSlug(orgName);
-      const res = await fetch("/api/organizations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(
-          invite
-            ? { inviteToken: invite }
-            : { name: orgName, slug }
-        ),
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setError(data.error || "Failed to create organization.");
-        setLoading(false);
-        return;
-      }
-
+      await createOrganization(orgName, invite);
       router.push(invite ? "/dashboard" : "/dashboard/onboarding");
       router.refresh();
-    } catch {
-      setError("Something went wrong. Please try again.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
       setLoading(false);
     }
   }
@@ -122,9 +143,13 @@ export default function RegisterPage({
           {invite ? "Join your team" : "Create your organization"}
         </h2>
         <p className="text-ink-muted">
-          {invite
-            ? "You were invited to an organization on Kivaro. Create your account to get started."
-            : "Set up your Kivaro account and start collecting in minutes."}
+          {isAuthenticated
+            ? invite
+              ? "You were invited to an organization on Kivaro. Accept the invite to join your team."
+              : "You're signed in but don't belong to an organization yet. Set one up to start collecting."
+            : invite
+              ? "You were invited to an organization on Kivaro. Create your account to get started."
+              : "Set up your Kivaro account and start collecting in minutes."}
         </p>
       </div>
 
@@ -134,7 +159,30 @@ export default function RegisterPage({
         </div>
       )}
 
-      {isGoogleSignInEnabled() && (
+      {pendingVerify ? (
+        <VerifyEmailStep
+          email={pendingVerify.email}
+          onBack={() => setPendingVerify(null)}
+          onVerified={async () => {
+            const result = await signIn.email({
+              email: pendingVerify.email,
+              password: pendingVerify.password,
+            });
+            if (result.error) {
+              setError(
+                "Email verified. Sign in with your email and password to continue."
+              );
+              setPendingVerify(null);
+              return;
+            }
+            await createOrganization(pendingVerify.orgName, invite);
+            router.push(invite ? "/dashboard" : "/dashboard/onboarding");
+            router.refresh();
+          }}
+        />
+      ) : (
+        <>
+      {isGoogleSignInEnabled() && !isAuthenticated && (
         <>
           <button
             type="button"
@@ -182,38 +230,42 @@ export default function RegisterPage({
           </div>
         )}
 
-        <div>
-          <label htmlFor="register-email" className="block text-sm font-medium mb-1.5">
-            Email address
-          </label>
-          <input
-            id="register-email"
-            type="email"
-            required
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@organization.com"
-            className="w-full p-3 rounded-xl border border-border bg-surface focus:outline-none focus:border-ink focus:ring-1 focus:ring-ink transition-all text-sm"
-          />
-        </div>
+        {!isAuthenticated && (
+          <>
+            <div>
+              <label htmlFor="register-email" className="block text-sm font-medium mb-1.5">
+                Email address
+              </label>
+              <input
+                id="register-email"
+                type="email"
+                required
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@organization.com"
+                className="w-full p-3 rounded-xl border border-border bg-surface focus:outline-none focus:border-ink focus:ring-1 focus:ring-ink transition-all text-sm"
+              />
+            </div>
 
-        <div>
-          <label htmlFor="register-password" className="block text-sm font-medium mb-1.5">
-            Password
-          </label>
-          <input
-            id="register-password"
-            type="password"
-            required
-            autoComplete="new-password"
-            minLength={8}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="At least 8 characters"
-            className="w-full p-3 rounded-xl border border-border bg-surface focus:outline-none focus:border-ink focus:ring-1 focus:ring-ink transition-all text-sm"
-          />
-        </div>
+            <div>
+              <label htmlFor="register-password" className="block text-sm font-medium mb-1.5">
+                Password
+              </label>
+              <input
+                id="register-password"
+                type="password"
+                required
+                autoComplete="new-password"
+                minLength={8}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="At least 8 characters"
+                className="w-full p-3 rounded-xl border border-border bg-surface focus:outline-none focus:border-ink focus:ring-1 focus:ring-ink transition-all text-sm"
+              />
+            </div>
+          </>
+        )}
 
         <button
           type="submit"
@@ -223,20 +275,24 @@ export default function RegisterPage({
           {loading ? (
             <span className="flex items-center justify-center gap-2">
               <div className="w-4 h-4 border-2 border-surface/30 border-t-surface rounded-full animate-spin" />
-              Creating account...
+              {isAuthenticated ? "Creating organization..." : "Creating account..."}
             </span>
           ) : (
-            "Create account"
+            isAuthenticated ? (invite ? "Accept invite" : "Create organization") : "Create account"
           )}
         </button>
       </form>
 
-      <p className="text-center text-sm text-ink-muted mt-8">
-        Already have an account?{" "}
-        <Link href="/login" className="text-terracotta font-medium hover:underline">
-          Sign in
-        </Link>
-      </p>
+      {!isAuthenticated && (
+        <p className="text-center text-sm text-ink-muted mt-8">
+          Already have an account?{" "}
+          <Link href="/login" className="text-terracotta font-medium hover:underline">
+            Sign in
+          </Link>
+        </p>
+      )}
+        </>
+      )}
     </div>
   );
 }
