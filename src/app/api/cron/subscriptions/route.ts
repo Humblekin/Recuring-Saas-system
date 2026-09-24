@@ -56,24 +56,31 @@ export async function GET(req: Request) {
         payeeNote: "Recurring contribution via Cowrie",
       });
 
-      await db.insert(payments).values({
-        reference,
-        organizationId: sub.organizationId,
-        paymentLinkId: sub.paymentLinkId,
-        campaignId: sub.campaignId,
-        supporterId: sub.supporterId,
-        subscriptionId: sub.id,
-        amount: sub.amount,
-        status: "pending",
-        isRecurring: true,
-        paymentMethod: "mtn_momo",
-        mtnTransactionId: referenceId,
-      });
+      // Insert the payment AND advance the billing date atomically — if either
+      // write fails the whole batch rolls back and nextBillingDate stays short,
+      // so the debit retries instead of recording a charge that has no billing
+      // slot. The MTN call itself is best-effort outside the transaction; a
+      // failure after a successful charge is reconciled via the webhook.
+      await db.transaction(async (tx) => {
+        await tx.insert(payments).values({
+          reference,
+          organizationId: sub.organizationId,
+          paymentLinkId: sub.paymentLinkId,
+          campaignId: sub.campaignId,
+          supporterId: sub.supporterId,
+          subscriptionId: sub.id,
+          amount: sub.amount,
+          status: "pending",
+          isRecurring: true,
+          paymentMethod: "mtn_momo",
+          mtnTransactionId: referenceId,
+        });
 
-      await db
-        .update(subscriptions)
-        .set({ nextBillingDate: addInterval(new Date(), sub.interval) })
-        .where(eq(subscriptions.id, sub.id));
+        await tx
+          .update(subscriptions)
+          .set({ nextBillingDate: addInterval(new Date(), sub.interval) })
+          .where(eq(subscriptions.id, sub.id));
+      });
 
       charged++;
     } catch (err) {

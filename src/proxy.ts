@@ -10,8 +10,13 @@ import type { NextRequest } from "next/server";
 // Routes that require authentication
 const PROTECTED_ROUTES = ["/dashboard"];
 
-// Neon Auth session cookie (must match the SDK's cookie name, NOT better-auth's)
-const NEON_AUTH_SESSION_COOKIE_NAME = "__Secure-neon-auth.session_token";
+// Neon Auth session cookie (must match the SDK's cookie name, NOT better-auth's).
+// The __Secure- prefix variant is used over HTTPS; browsers silently drop such
+// cookies on plain HTTP (local dev), where Neon Auth still sets the plain name.
+const NEON_AUTH_SESSION_COOKIE_NAMES = [
+  "__Secure-neon-auth.session_token",
+  "neon-auth.session_token",
+];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -43,9 +48,11 @@ export function proxy(request: NextRequest) {
   if (isProtectedRoute) {
     // Presence check as a cheap fast-path. The actual session is verified
     // server-side via auth.getSession() in the dashboard layout and actions.
-    const sessionCookie = request.cookies.get(NEON_AUTH_SESSION_COOKIE_NAME);
+    const hasSessionCookie = request.cookies
+      .getAll()
+      .some((cookie) => NEON_AUTH_SESSION_COOKIE_NAMES.includes(cookie.name));
 
-    if (!sessionCookie) {
+    if (!hasSessionCookie) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(loginUrl);

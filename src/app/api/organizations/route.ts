@@ -3,6 +3,7 @@ import { randomBytes } from "crypto";
 import { db } from "@/lib/db";
 import { organizations, users } from "@/lib/db/schema";
 import { requireAuth } from "@/lib/auth/server";
+import { getOrLinkUserRecord } from "@/lib/auth/org";
 import { eq } from "drizzle-orm";
 import { cleanText, MAX_NAME } from "@/lib/security/sanitize";
 import { getClientIp, isRateLimited } from "@/lib/security/rate-limit";
@@ -33,9 +34,9 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => ({}));
 
     // Check whether the user is already attached to an org (idempotent).
-    const existingUser = await db.query.users.findFirst({
-      where: eq(users.neonAuthId, session.user.id),
-    });
+    // getOrLinkUserRecord also re-links sessions whose Neon Auth id drifted
+    // (auth project recreated) so an existing account isn't orphaned.
+    const existingUser = await getOrLinkUserRecord(session);
 
     // --- Team invite: join an existing organization by secret token ---
     const inviteToken = body.inviteToken as string | undefined;

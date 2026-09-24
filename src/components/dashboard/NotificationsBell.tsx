@@ -58,6 +58,16 @@ export function NotificationsBell({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
+  // Hydrate after mount when the server rendered no initial data — keeps the
+  // dashboard page render fast (no blocking DB round-trips in the layout).
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (initialCount === 0 && initialItems.length === 0) refresh();
+    }, 0);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Poll the DB fresh every open + mark as read
   async function toggle() {
     const next = !open;
