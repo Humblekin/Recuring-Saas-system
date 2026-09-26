@@ -58,6 +58,22 @@ export async function markNotificationsRead(organizationId: string): Promise<voi
     .where(and(eq(notifications.organizationId, organizationId), isNull(notifications.readAt)));
 }
 
+/**
+ * Delete one notification. The organizationId is part of the WHERE clause
+ * rather than checked beforehand, so a caller can only ever delete their own
+ * org's rows — an id from another tenant matches nothing and is a no-op.
+ */
+export async function deleteNotification(id: string, organizationId: string): Promise<void> {
+  await db
+    .delete(notifications)
+    .where(and(eq(notifications.id, id), eq(notifications.organizationId, organizationId)));
+}
+
+/** Delete every notification for an organization (the bell's "Clear all"). */
+export async function clearNotifications(organizationId: string): Promise<void> {
+  await db.delete(notifications).where(eq(notifications.organizationId, organizationId));
+}
+
 /** Resolve the organization id that owns a supporter's email/phone when needed. */
 export async function orgIdForUser(userId: string): Promise<string | null> {
   const user = await db.query.users.findFirst({

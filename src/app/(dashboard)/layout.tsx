@@ -12,6 +12,8 @@ import {
   getUnreadNotificationCount,
   getNotificationsFeed,
   markAllNotificationsRead,
+  dismissNotification,
+  clearAllNotifications,
 } from "@/app/actions/notifications";
 
 export default async function DashboardLayout({
@@ -99,6 +101,8 @@ export default async function DashboardLayout({
               loadCount={getUnreadNotificationCount}
               loadItems={getNotificationsFeed}
               markRead={markAllNotificationsRead}
+              dismiss={dismissNotification}
+              clearAll={clearAllNotifications}
             />
             <div className="w-8 h-8 bg-terracotta/10 text-terracotta rounded-full flex items-center justify-center font-medium text-sm md:hidden">
               {(localUser.name || session.user.name || "O").charAt(0).toUpperCase()}
