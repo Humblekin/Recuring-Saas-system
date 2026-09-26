@@ -12,6 +12,13 @@ import {
   ShareIcon,
   WalletIcon,
 } from "@/components/ui/icons";
+import { useTheme } from "@/components/ui/ThemeProvider";
+
+// The stage artwork has a light-mode variant. Same container, framing and
+// crop in both — only the source differs. Read from the existing theme
+// context so the toggle already on the page drives it.
+const HERO_IMAGE_DARK = "/images/landing/momo.png";
+const HERO_IMAGE_LIGHT = "/images/landing/momo-logo-2png.png";
 
 // =============================================================================
 // HERO — Premium dark fintech hero, MoMo-ready
@@ -86,6 +93,9 @@ function ArrowRight({ className = "" }: { className?: string }) {
 }
 
 export default function Hero() {
+  const { theme } = useTheme();
+  const heroImage = theme === "light" ? HERO_IMAGE_LIGHT : HERO_IMAGE_DARK;
+
   const headlineRef = useRef<HTMLHeadingElement>(null);
   const copyRef = useRef<HTMLParagraphElement>(null);
   const visualRef = useRef<HTMLDivElement>(null);
@@ -225,9 +235,9 @@ export default function Hero() {
                   aria-hidden="true"
                 />
 
-                <div className="relative aspect-[16/10] rounded-[1.75rem] border border-white/10 overflow-hidden bg-surface shadow-product">
+                <div className="relative aspect-[4/3] sm:aspect-[16/10] rounded-2xl border border-ink/10 overflow-hidden bg-surface shadow-product">
                   <Image
-                    src="/images/landing/momo.png"
+                    src={heroImage}
                     alt="Ghanaian man using the Kivaro app on his smartphone"
                     fill
                     priority
