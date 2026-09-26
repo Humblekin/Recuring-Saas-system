@@ -87,6 +87,15 @@ export default async function ContributionsPage() {
                     <td className="p-4 text-sm text-ink-muted">{payment.isRecurring ? "Recurring" : "One-time"}</td>
                     <td className="p-4 text-sm">
                       <StatusBadge status={payment.status} />
+                      {payment.status === "failed" &&
+                        (payment.metadata as { mtnReason?: string } | undefined)?.mtnReason && (
+                          <p
+                            className="text-xs text-ink-muted mt-1 max-w-[280px] truncate"
+                            title={(payment.metadata as { mtnReason: string }).mtnReason}
+                          >
+                            {(payment.metadata as { mtnReason: string }).mtnReason}
+                          </p>
+                        )}
                     </td>
                     <td className="p-4 text-sm text-ink-muted whitespace-nowrap">
                       {new Date(payment.createdAt).toLocaleDateString()}

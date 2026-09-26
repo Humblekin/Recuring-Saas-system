@@ -35,7 +35,7 @@ export function SettingsClient({
   org: OrgShape;
   user: { id: string; name: string | null; email: string; role: string | null };
   sessionUser: { email?: string | null; emailVerified?: boolean | null };
-  payments: { configured: boolean; mode: "live" | "test" | null; error: string | null; hasPaymentLinks: boolean };
+  payments: { configured: boolean; mode: "live" | "test" | null; error: string | null; warnings: string[]; hasPaymentLinks: boolean };
 }) {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("profile");
@@ -220,6 +220,19 @@ export function SettingsClient({
               </>
             )}
           </div>
+
+          {/* Non-blocking misconfiguration: the integration works, but these
+              settings will cost real settlements once traffic arrives. */}
+          {payments.warnings.length > 0 && (
+            <ul className="p-4 rounded-xl border border-warning/30 bg-warning/5 text-xs text-warning space-y-1.5">
+              {payments.warnings.map((w) => (
+                <li key={w} className="flex gap-2">
+                  <span aria-hidden>⚠</span>
+                  <span>{w}</span>
+                </li>
+              ))}
+            </ul>
+          )}
 
           <div className="pt-4 border-t border-border flex items-center justify-between">
             <div>

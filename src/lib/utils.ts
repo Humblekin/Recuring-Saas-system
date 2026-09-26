@@ -54,12 +54,38 @@ export function formatFrequency(frequency: string): string {
   }
 }
 
-/** Compute the next billing date after applying a recurring interval. */
+/** Days in the given month (0-indexed), e.g. daysInMonth(2026, 1) === 28. */
+function daysInMonth(year: number, monthIndex: number): number {
+  return new Date(year, monthIndex + 1, 0).getDate();
+}
+
+/**
+ * Compute the next billing date after applying a recurring interval.
+ *
+ * Month/year arithmetic CLAMPS to the last valid day instead of rolling over.
+ * `setMonth(getMonth() + 1)` overflows: on Jan 31 it yields Mar 3, because
+ * February has no 31st. That silently skipped an entire billing cycle and then
+ * pinned the supporter to the 3rd of every following month — a supporter who
+ * signed up on the 31st would never be charged in February, and would be
+ * charged on a day they never agreed to. Clamping gives Jan 31 -> Feb 28/29,
+ * which is the conventional behaviour for recurring billing.
+ */
 export function addInterval(date: Date, interval: string): Date {
   const next = new Date(date);
-  if (interval === "weekly") next.setDate(next.getDate() + 7);
-  else if (interval === "monthly") next.setMonth(next.getMonth() + 1);
-  else if (interval === "yearly") next.setFullYear(next.getFullYear() + 1);
+  if (interval === "weekly") {
+    next.setDate(next.getDate() + 7);
+  } else if (interval === "monthly") {
+    const day = next.getDate();
+    next.setDate(1);
+    next.setMonth(next.getMonth() + 1);
+    next.setDate(Math.min(day, daysInMonth(next.getFullYear(), next.getMonth())));
+  } else if (interval === "yearly") {
+    // Feb 29 + 1 year has no Feb 29; clamp to Feb 28.
+    const day = next.getDate();
+    next.setDate(1);
+    next.setFullYear(next.getFullYear() + 1);
+    next.setDate(Math.min(day, daysInMonth(next.getFullYear(), next.getMonth())));
+  }
   return next;
 }
 

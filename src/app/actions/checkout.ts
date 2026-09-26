@@ -1,6 +1,5 @@
 "use server";
 
-import crypto from "node:crypto";
 import { db } from "@/lib/db";
 import {
   organizations,
@@ -18,6 +17,7 @@ import {
   getTransactionStatus,
   isValidMsisdn,
   logPay,
+  MtnApiError,
   mtnConfigMissing,
   mtnStatusToLocal,
   normalizeMsisdn,
@@ -42,6 +42,20 @@ import { getClientIp, isRateLimited } from "@/lib/security/rate-limit";
 
 const MAX_AMOUNT_MAJOR = 100000; // GHS 100,000 cap
 
+// Client-generated UUID that identifies one checkout attempt across retries.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// MTN rejects a repeated X-Reference-Id. That is NOT a failed payment: it means
+// the first attempt already created the charge. The row must stay pending and
+// the client must keep polling the same reference, otherwise a retry would
+// overwrite a live transaction with a bogus "failed" status.
+function isDuplicateReferenceError(err: unknown): boolean {
+  if (!(err instanceof MtnApiError)) return false;
+  if (err.status !== 400 && err.status !== 409) return false;
+  const m = err.message.toLowerCase();
+  return m.includes("reference") || m.includes("duplicate") || m.includes("already exist");
+}
+
 // MTN's maximum pre-approval validity (capped at 32768 hours ≈ 3.7 years);
 // 5-year intent is capped here by the platform.
 const PRE_APPROVAL_VALIDITY_SECONDS = 32768 * 60 * 60;
@@ -59,6 +73,13 @@ export type CheckoutResult =
       subscriptionId: string;
       paymentReference: string;
       receiptPath: string;
+    }
+  // Returned (not thrown) when the provider rejects the flow — thrown errors
+  // are redacted in production and would surface as a cryptic "#441" message.
+  | {
+      kind: "unavailable";
+      reason: string;
+      paymentReference: string;
     };
 
 export async function processCheckout(data: {
@@ -71,6 +92,10 @@ export async function processCheckout(data: {
   phone: string;
   mode: "one-time" | "recurring";
   frequency?: "weekly" | "monthly" | "yearly";
+  // Stable across retries of the SAME checkout attempt. The browser generates
+  // it once and reuses it if the request times out, so a supporter who retries
+  // can never be charged twice.
+  idempotencyKey: string;
 }): Promise<CheckoutResult> {
   // 1. Guard against courtesy spam / abuse of the public endpoint.
   if (isRateLimited({ bucket: "checkout", clientKey: await getClientIp(), limit: 10, windowMs: 60_000 })) {
@@ -91,6 +116,9 @@ export async function processCheckout(data: {
   }
   if (!data.phone || !isValidMsisdn(data.phone)) {
     throw new Error("Please provide a valid MTN MoMo phone number (e.g. 024…).");
+  }
+  if (!data.idempotencyKey || !UUID_RE.test(data.idempotencyKey)) {
+    throw new Error("Invalid checkout request. Please refresh the page and try again.");
   }
 
   // 2. Resolve the organization
@@ -162,60 +190,107 @@ export async function processCheckout(data: {
     if (!supporter) throw new Error("Could not create supporter record.");
   }
 
-  // 8. Build the payment + provider references (amount stored in pesewas)
-  const reference = `kivaro_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`.toLowerCase();
+  // 8. Build the payment record. The idempotency key doubles as MTN's
+  //    X-Reference-Id, so a retry re-sends the IDENTICAL reference and MTN
+  //    de-duplicates it: at most one charge can ever exist per key.
   const amountInPesewas = Math.round(data.amount * 100);
   const payerMsisdn = normalizeMsisdn(data.phone);
-
-  await db.insert(payments).values({
-    reference,
-    organizationId: org.id,
-    paymentLinkId: link?.id ?? null,
-    campaignId,
-    supporterId: supporter.id,
-    amount: amountInPesewas,
-    status: "pending",
-    isRecurring,
-    paymentMethod: "mtn_momo",
-  });
-
-  logPay("payment created pending:", { reference, org: org.slug, amountGHS: data.amount, type: data.mode, frequency: data.frequency || null });
+  const idempotencyKey = data.idempotencyKey.toLowerCase();
+  const mtnReferenceId = idempotencyKey;
+  const reference = `kivaro_${idempotencyKey.replace(/-/g, "").slice(0, 16)}`;
 
   const receiptPath = `/give/${org.slug}/callback`;
+
+  const insertedRows = await db
+    .insert(payments)
+    .values({
+      reference,
+      idempotencyKey,
+      organizationId: org.id,
+      paymentLinkId: link?.id ?? null,
+      campaignId,
+      supporterId: supporter.id,
+      amount: amountInPesewas,
+      status: "pending",
+      isRecurring,
+      paymentMethod: "mtn_momo",
+    })
+    .onConflictDoNothing()
+    .returning();
+
+  // Lost the insert race (double submit, or a retry arriving while the first
+  // attempt is still in flight) — adopt the row that actually won.
+  const payment =
+    insertedRows[0] ??
+    (await db.query.payments.findFirst({ where: eq(payments.idempotencyKey, idempotencyKey) }));
+  if (!payment) throw new Error("Could not create payment record.");
+
+  // Replay guard: a key that already produced a provider reference must never
+  // be charged again. Return the original result so the client can carry on
+  // polling the same transaction.
+  if (payment.mtnTransactionId) {
+    logPay("checkout replay, returning existing charge:", {
+      reference: payment.reference,
+      org: org.slug,
+      status: payment.status,
+    });
+    if (payment.status === "failed") {
+      throw new Error("This payment attempt already failed. Please start a new payment.");
+    }
+    if (!isRecurring || !payment.subscriptionId) {
+      return {
+        kind: "one-time",
+        referenceId: payment.mtnTransactionId,
+        paymentReference: payment.reference,
+        receiptPath: `${receiptPath}?kind=one-time&referenceId=${payment.mtnTransactionId}`,
+      };
+    }
+    return {
+      kind: "recurring",
+      preApprovalId: payment.mtnTransactionId,
+      subscriptionId: payment.subscriptionId,
+      paymentReference: payment.reference,
+      receiptPath: `${receiptPath}?kind=recurring&referenceId=${payment.mtnTransactionId}`,
+    };
+  }
+
+  // No provider reference yet: either a fresh checkout, or a crash between the
+  // insert and the MTN call. Re-driving below with the same X-Reference-Id is
+  // safe in both cases.
+  logPay("payment created pending:", { reference: payment.reference, org: org.slug, amountGHS: data.amount, type: data.mode, frequency: data.frequency || null });
 
   try {
     if (!isRecurring) {
       // 9a. ONE-TIME — request a payment from the payer's MoMo wallet.
-      const referenceId = crypto.randomUUID();
       await requestToPay(
         {
           amountMinor: amountInPesewas,
-          externalId: reference,
+          externalId: payment.reference,
           payerMsisdn,
           payerMessage: "Your contribution to " + org.name,
           payeeNote: "Kivaro contribution to " + org.name,
         },
-        referenceId
+        mtnReferenceId
       );
       await db
         .update(payments)
-        .set({ mtnTransactionId: referenceId })
-        .where(eq(payments.reference, reference));
+        .set({ mtnTransactionId: mtnReferenceId })
+        .where(eq(payments.id, payment.id));
 
       return {
         kind: "one-time",
-        referenceId,
-        paymentReference: reference,
-        receiptPath: `${receiptPath}?kind=one-time&referenceId=${referenceId}`,
+        referenceId: mtnReferenceId,
+        paymentReference: payment.reference,
+        receiptPath: `${receiptPath}?kind=one-time&referenceId=${mtnReferenceId}`,
       };
     }
 
     // 9b. RECURRING — ask the payer to authorize a pre-approval.
-    const preApprovalId = crypto.randomUUID();
+    const preApprovalId = mtnReferenceId;
     await createPreApproval(
       {
         amountMinor: amountInPesewas,
-        externalId: reference,
+        externalId: payment.reference,
         payerMsisdn,
         validityTimeSeconds: PRE_APPROVAL_VALIDITY_SECONDS,
         payerMessage: "Authorize recurring contributions to " + org.name,
@@ -243,23 +318,75 @@ export async function processCheckout(data: {
     await db
       .update(payments)
       .set({ subscriptionId: subscription.id })
-      .where(eq(payments.reference, reference));
+      .where(eq(payments.id, payment.id));
 
     return {
       kind: "recurring",
       preApprovalId,
       subscriptionId: subscription.id,
-      paymentReference: reference,
+      paymentReference: payment.reference,
       receiptPath: `${receiptPath}?kind=recurring&referenceId=${preApprovalId}`,
     };
   } catch (err) {
+    // A repeated reference means the charge already exists — recover instead of
+    // failing a live payment.
+    if (isDuplicateReferenceError(err)) {
+      logPay("provider reported duplicate reference; keeping payment pending:", {
+        reference: payment.reference,
+        org: org.slug,
+      });
+      await db
+        .update(payments)
+        .set({ mtnTransactionId: mtnReferenceId })
+        .where(eq(payments.id, payment.id));
+
+      if (isRecurring) {
+        const existingSub = await db.query.subscriptions.findFirst({
+          where: eq(subscriptions.mtnPreApprovalId, mtnReferenceId),
+        });
+        if (existingSub) {
+          return {
+            kind: "recurring",
+            preApprovalId: mtnReferenceId,
+            subscriptionId: existingSub.id,
+            paymentReference: payment.reference,
+            receiptPath: `${receiptPath}?kind=recurring&referenceId=${mtnReferenceId}`,
+          };
+        }
+        throw new Error("Your authorization is already in progress. Please check your MoMo wallet.");
+      }
+
+      return {
+        kind: "one-time",
+        referenceId: mtnReferenceId,
+        paymentReference: payment.reference,
+        receiptPath: `${receiptPath}?kind=one-time&referenceId=${mtnReferenceId}`,
+      };
+    }
+
     // Provider could not be reached — the pending record must not look usable.
+    // Persist the real reason so the dashboard explains the failure instead of
+    // showing a bare "failed" status.
+    const msg = err instanceof Error ? err.message : String(err);
+    logPay("provider request failed, payment marked failed:", { reference: payment.reference, org: org.slug, error: msg.slice(0, 160) });
     await db
       .update(payments)
-      .set({ status: "failed" })
-      .where(eq(payments.reference, reference));
-    const msg = err instanceof Error ? err.message : String(err);
-    logPay("provider request failed, payment marked failed:", { reference, org: org.slug, error: msg.slice(0, 160) });
+      .set({
+        status: "failed",
+        metadata: { mtnReason: msg, failedAt: new Date().toISOString() },
+      })
+      .where(eq(payments.id, payment.id));
+
+    // Recurring pre-approval is commonly not provisioned on an MTN account
+    // (the sandbox returns 404 for /collection/v1_0/preapproval). Surface a
+    // clear, actionable message instead of a raw API error.
+    if (isRecurring && err instanceof MtnApiError && err.status === 404 && err.message.includes("preapproval")) {
+      return {
+        kind: "unavailable",
+        reason: "Recurring giving is not available on this account yet. Please use one-time giving instead.",
+        paymentReference: payment.reference,
+      };
+    }
     throw err;
   }
 }
@@ -278,6 +405,17 @@ export async function getMomoStatus(data: {
   kind: "one-time" | "recurring";
   referenceId: string;
 }): Promise<MomoStatusResult> {
+  // This action is public and unauthenticated, takes no ownership proof, and
+  // makes an outbound MTN call plus a DB write on every call — an unthrottled
+  // amplification vector against both MTN and the database. The giving form
+  // polls every 4s (15/min), so this leaves ample headroom for a real payer.
+  if (isRateLimited({ bucket: "momo-status", clientKey: await getClientIp(), limit: 40, windowMs: 60_000 })) {
+    throw new Error("Too many status checks. Please wait a moment and try again.");
+  }
+  if (!data.referenceId || !UUID_RE.test(data.referenceId)) {
+    throw new Error("Invalid reference.");
+  }
+
   if (data.kind === "one-time") return checkOneTimeStatus(data.referenceId);
   return checkRecurringStatus(data.referenceId);
 }

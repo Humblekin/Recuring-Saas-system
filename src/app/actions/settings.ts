@@ -5,7 +5,7 @@ import { organizations, users, paymentLinks } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { requireOrgContext } from "@/lib/auth/org";
 import { revalidatePath } from "next/cache";
-import { mtnConfigMissing, testMtnConfig } from "@/lib/mtn";
+import { mtnConfigMissing, mtnConfigWarnings, testMtnConfig } from "@/lib/mtn";
 import {
   cleanEmail,
   cleanMultiline,
@@ -137,10 +137,17 @@ export async function getPaymentConfigStatus() {
     columns: { id: true },
   });
 
+  // Non-blocking misconfiguration (localhost callback, no payee MSISDN). These
+  // do not stop payments working, so they are surfaced as warnings rather than
+  // folded into `error` — an operator needs to see them, but reporting the
+  // integration as broken would be wrong.
+  const warnings = mtnConfigWarnings();
+
   return {
     configured: hasSecretKey && mode != null && !error,
     mode,
     error,
+    warnings,
     hasPaymentLinks: links.length > 0,
   };
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { processCheckout, getMomoStatus } from "@/app/actions/checkout";
 import { cn, errorMessage } from "@/lib/utils";
 import type { RecurringFrequency } from "@/lib/constants";
@@ -60,6 +60,13 @@ export function GiveForm({
 
   const [pending, setPending] = useState<PendingState | null>(null);
   const [pendingResult, setPendingResult] = useState<"pending" | "success" | "failed">("pending");
+
+  // Idempotency key for the CURRENT checkout attempt. The server treats this as
+  // "one charge, ever": if the request times out or the supporter presses Give
+  // again, the retry replays this key instead of creating a second charge. It is
+  // keyed to a fingerprint of the payment details, so editing the amount/phone
+  // mints a genuinely new key rather than replaying a stale attempt.
+  const attemptRef = useRef<{ key: string; fingerprint: string } | null>(null);
 
   const selected = links.find((l) => l.id === linkId) || activeLink;
 
@@ -137,6 +144,20 @@ export function GiveForm({
 
     setSubmitting(true);
     try {
+      const fingerprint = JSON.stringify([
+        orgSlug,
+        selected?.slug ?? null,
+        campaignSlug ?? null,
+        amount,
+        email.trim().toLowerCase(),
+        phone.trim(),
+        clickableMode,
+        frequency,
+      ]);
+      if (!attemptRef.current || attemptRef.current.fingerprint !== fingerprint) {
+        attemptRef.current = { key: crypto.randomUUID(), fingerprint };
+      }
+
       const result = await processCheckout({
         orgSlug,
         linkSlug: selected?.slug,
@@ -147,7 +168,16 @@ export function GiveForm({
         phone,
         mode: clickableMode,
         frequency: clickableMode === "recurring" ? frequency : undefined,
+        idempotencyKey: attemptRef.current.key,
       });
+      if (result.kind === "unavailable") {
+        attemptRef.current = null;
+        setError(result.reason);
+        setSubmitting(false);
+        return;
+      }
+      // The charge exists now, so the next Give press is a new contribution.
+      attemptRef.current = null;
       setPending({
         kind: result.kind,
         referenceId: result.kind === "one-time" ? result.referenceId : result.preApprovalId,
@@ -155,12 +185,21 @@ export function GiveForm({
       });
       setPendingResult("pending");
     } catch (err) {
-      setError(errorMessage(err, "Something went wrong while starting the payment."));
+      const raw = errorMessage(err, "Something went wrong while starting the payment.");
+      // Production redacts server-action error text to a cryptic "#441"-style
+      // message — replace it with a clear fallback so the supporter isn't
+      // shown an internal React error string.
+      setError(
+        /Minified React error|Server Components render|omitted in production/.test(raw)
+          ? "Something went wrong while starting the payment. Please try again."
+          : raw
+      );
       setSubmitting(false);
     }
   }
 
   function resetPending() {
+    attemptRef.current = null;
     setPending(null);
     setPendingResult("pending");
     setSubmitting(false);

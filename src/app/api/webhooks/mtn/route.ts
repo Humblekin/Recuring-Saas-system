@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { payments, subscriptions, webhookEvents } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, lt } from "drizzle-orm";
 import { addInterval } from "@/lib/utils";
 import { createNotification } from "@/lib/notifications";
 import { mtnStatusToLocal, logPay } from "@/lib/mtn";
@@ -20,6 +20,20 @@ import { getClientIp, isRateLimited } from "@/lib/security/rate-limit";
 // =============================================================================
 
 export const dynamic = "force-dynamic";
+
+// How long a dedupe marker is kept. MTN redelivers only within a bounded retry
+// window, so once a marker is older than this it can never suppress a
+// redelivery again. Markers are otherwise only deleted when processing fails,
+// which made this table grow without bound — one row per unique event, forever.
+const WEBHOOK_EVENT_RETENTION_DAYS = 30;
+
+/** Fire-and-forget prune of expired dedupe markers. Never throws. */
+function pruneWebhookEvents() {
+  const cutoff = new Date(Date.now() - WEBHOOK_EVENT_RETENTION_DAYS * 24 * 60 * 60 * 1000);
+  db.delete(webhookEvents)
+    .where(lt(webhookEvents.processedAt, cutoff))
+    .catch((err) => console.error("MTN webhook: failed to prune old dedupe markers:", err));
+}
 
 // MTN probes the callback URL with a GET request during provisioning.
 export async function GET() {
@@ -124,6 +138,12 @@ async function handleCallback(req: Request): Promise<NextResponse> {
         });
       return NextResponse.json({ ok: false }, { status: 500 });
     }
+
+    // The event is durably applied, so the marker has served its purpose.
+    // Pruning is best-effort and deliberately not awaited: acknowledging MTN
+    // promptly matters more than reclaiming rows, and a prune failure must
+    // never turn a settled payment into a retried one.
+    pruneWebhookEvents();
 
     return NextResponse.json({ ok: true });
   } catch (err) {

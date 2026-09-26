@@ -124,21 +124,34 @@ export async function createCampaign(data: {
   const endDate = data.endDate ? new Date(data.endDate) : null;
 
   // 1. Create the scoped payment link for this campaign (slug must be unique).
-  const linkSlug = await uniqueSlug(makeSlug(title, "-campaign"), organization.id);
-  const link = await db
-    .insert(paymentLinks)
-    .values({
-      organizationId: organization.id,
-      name: title,
-      slug: linkSlug,
-      description,
-      amounts,
-      oneTimeEnabled: true,
-      recurringEnabled: Boolean(data.recurringEnabled),
-      frequencies,
-      isActive: true,
-    })
-    .returning();
+  // uniqueSlug() is check-then-insert, so two concurrent creates can still pick
+  // the same slug. The unique index on (organization_id, slug) turns that race
+  // into a 23505 rather than a duplicate public URL, so resolve it by moving to
+  // the next candidate instead of surfacing a raw constraint error.
+  const linkBase = makeSlug(title, "-campaign");
+  let link: { id: string } | undefined;
+  for (let attempt = 0; attempt < 5 && !link; attempt++) {
+    try {
+      const inserted = await db
+        .insert(paymentLinks)
+        .values({
+          organizationId: organization.id,
+          name: title,
+          slug: await uniqueSlug(linkBase, organization.id),
+          description,
+          amounts,
+          oneTimeEnabled: true,
+          recurringEnabled: Boolean(data.recurringEnabled),
+          frequencies,
+          isActive: true,
+        })
+        .returning({ id: paymentLinks.id });
+      link = inserted[0];
+    } catch (err) {
+      if ((err as { code?: string })?.code !== "23505") throw err;
+    }
+  }
+  if (!link) throw new Error("Could not allocate a unique payment link. Please try again.");
 
   // 2. Create the campaign record pointing at the link.
   const campaignSlug = await uniqueSlug(makeSlug(title), organization.id);
@@ -146,7 +159,7 @@ export async function createCampaign(data: {
     .insert(campaigns)
     .values({
       organizationId: organization.id,
-      paymentLinkId: link[0].id,
+      paymentLinkId: link.id,
       title,
       slug: campaignSlug,
       description,

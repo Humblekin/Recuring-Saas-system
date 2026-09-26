@@ -29,8 +29,11 @@ export function logPay(...parts: unknown[]) {
 //   MTN_COLLECTION_PRIMARY_KEY   Ocp-Apim-Subscription-Key from the portal
 //   MTN_API_USER                 sandbox: generated / prod: from portal
 //   MTN_API_KEY                  sandbox: generated / prod: from portal
-//   MTN_PAYEE_MSISDN             org's fund-settlement mobile number (country code form)
+//   MTN_PAYEE_MSISDN             OPTIONAL settlement number. When set it is sent
+//                                as the `payee` on every charge. When empty the
+//                                payee configured in the MTN portal is used.
 //   MTN_CURRENCY                 "GHS" (default). Sandbox transparently uses EUR.
+//   MTN_TIMEOUT_MS               per-request timeout, default 15000
 //
 // NOTE: the MTN sandbox wallet only accepts EUR (a request with GHS is
 // rejected with INVALID_CURRENCY). Kivaro stays "always GHS" product-facing:
@@ -43,15 +46,25 @@ export function logPay(...parts: unknown[]) {
 export type MtnMode = "sandbox" | "production";
 export type MtnPaymentStatus = "PENDING" | "SUCCESSFUL" | "FAILED" | "REJECTED";
 
+/**
+ * An error returned by (or while calling) MTN.
+ *
+ * `transient` marks failures where retrying the exact same request later is
+ * reasonable: timeouts, DNS/TLS failures, and MTN 5xx/429. Non-transient
+ * failures are MTN telling us the request itself is wrong (4xx) and will keep
+ * failing until the input changes.
+ */
 export class MtnApiError extends Error {
   status: number;
   body: string;
+  transient: boolean;
 
-  constructor(message: string, status: number, body: string) {
+  constructor(message: string, status: number, body: string, transient = false) {
     super(message);
     this.name = "MtnApiError";
     this.status = status;
     this.body = body;
+    this.transient = transient;
   }
 }
 
@@ -65,12 +78,14 @@ export type MtnConfig = {
   payeeMsisdn: string;
   currency: string;
   callbackUrl: string;
+  timeoutMs: number;
 };
 
 export function mtnConfig(): MtnConfig {
   const mode: MtnMode = process.env.MTN_MODE === "production" ? "production" : "sandbox";
   const defaultBase =
     mode === "production" ? "https://proxy.momoapi.mtn.com" : "https://sandbox.momodeveloper.mtn.com";
+  const timeout = Number(process.env.MTN_TIMEOUT_MS);
   return {
     mode,
     baseUrl: (process.env.MTN_API_BASE_URL || defaultBase).replace(/\/+$/, ""),
@@ -81,9 +96,11 @@ export function mtnConfig(): MtnConfig {
     payeeMsisdn: process.env.MTN_PAYEE_MSISDN || "",
     currency: process.env.MTN_CURRENCY || "GHS",
     callbackUrl: process.env.MTN_CALLBACK_URL || "",
+    timeoutMs: Number.isFinite(timeout) && timeout > 0 ? timeout : 15_000,
   };
 }
 
+/** Variables that make the integration non-functional. Checkout refuses to run. */
 export function mtnConfigMissing(): string[] {
   const missing: string[] = [];
   const m = mtnConfig();
@@ -92,6 +109,34 @@ export function mtnConfigMissing(): string[] {
   if (!m.apiKey) missing.push("MTN_API_KEY");
   if (!m.targetEnvironment) missing.push("MTN_TARGET_ENVIRONMENT");
   return missing;
+}
+
+/**
+ * Non-blocking misconfigurations. These do not stop a sandbox charge from
+ * working, but they silently break production (e.g. no settlement callback
+ * means only the supporter's browser poll ever settles a payment). Surfaced in
+ * Settings and Onboarding instead of thrown at checkout.
+ */
+export function mtnConfigWarnings(): string[] {
+  const warnings: string[] = [];
+  const m = mtnConfig();
+  if (!m.callbackUrl) {
+    warnings.push(
+      "MTN_CALLBACK_URL is not set. Payments will only settle when the supporter's browser reports back; if they close the tab the payment stays pending."
+    );
+  } else if (/^https?:\/\/(localhost|127\.0\.0\.1)\b/i.test(m.callbackUrl)) {
+    warnings.push(
+      `MTN_CALLBACK_URL points at localhost (${m.callbackUrl}). MTN cannot reach it from the internet — production settlements will never be delivered. Set it to your public HTTPS URL.`
+    );
+  } else if (!/^https:\/\//i.test(m.callbackUrl)) {
+    warnings.push(`MTN_CALLBACK_URL is not HTTPS (${m.callbackUrl}). Use your public HTTPS URL in production.`);
+  }
+  if (m.mode === "production" && !m.payeeMsisdn) {
+    warnings.push(
+      "MTN_PAYEE_MSISDN is empty in production, so charges rely entirely on the payee configured in the MTN portal. Set it explicitly if you settle to more than one number."
+    );
+  }
+  return warnings;
 }
 
 /** Normalize user-entered MSISDN to the format MTN expects (233xxxxxxxxx). */
@@ -123,39 +168,123 @@ export function mtnStatusToLocal(status: string): "success" | "failed" | "pendin
   return "pending";
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * MTN rejects the whole request with an opaque 400 and an empty body when
+ * X-Reference-Id is not a UUID. Fail loudly here instead so the cause is never
+ * a mystery blank 400 in the logs.
+ */
+function assertUuid(value: string, field: string): string {
+  if (!UUID_RE.test(value)) {
+    throw new MtnApiError(`MTN ${field} must be a UUID (got a non-UUID value)`, 0, "", false);
+  }
+  return value;
+}
+
 // --- Auth ---
 
-let accessTokenCache: { token: string; expiresAt: number } | null = null;
+// Refresh this many ms before the token actually expires so a request is never
+// sent with a token that dies mid-flight.
+const TOKEN_EXPIRY_SKEW_MS = 60_000;
 
+let cachedToken: { token: string; expiresAt: number } | null = null;
+let inFlightToken: Promise<string> | null = null;
+
+/** Drop any cached token. Used to force a clean re-auth after a 401. */
+function invalidateTokenCache() {
+  cachedToken = null;
+  inFlightToken = null;
+}
+
+/**
+ * Obtain (and cache) the OAuth access token.
+ *
+ * Single-flight: concurrent callers arriving on a cold cache all await the SAME
+ * in-flight request. Without this, N simultaneous requests fired N OAuth calls,
+ * which is how a traffic spike turns into MTN 429s and failed payments.
+ */
 async function getAccessToken(): Promise<string> {
-  const cfg = mtnConfig();
-  if (accessTokenCache && accessTokenCache.expiresAt > Date.now() + 30_000) {
-    return accessTokenCache.token;
+  if (cachedToken && cachedToken.expiresAt > Date.now() + TOKEN_EXPIRY_SKEW_MS) {
+    return cachedToken.token;
   }
+  if (!inFlightToken) {
+    inFlightToken = requestAccessToken().finally(() => {
+      inFlightToken = null;
+    });
+  }
+  return inFlightToken;
+}
 
-  const res = await fetch(`${cfg.baseUrl}/collection/token/`, {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${Buffer.from(`${cfg.apiUser}:${cfg.apiKey}`).toString("base64")}`,
-      "Ocp-Apim-Subscription-Key": cfg.primaryKey,
-      "Content-Type": "application/json",
+async function requestAccessToken(): Promise<string> {
+  const cfg = mtnConfig();
+  const res = await timedFetch(
+    `${cfg.baseUrl}/collection/token/`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${Buffer.from(`${cfg.apiUser}:${cfg.apiKey}`).toString("base64")}`,
+        "Ocp-Apim-Subscription-Key": cfg.primaryKey,
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
     },
-    cache: "no-store",
-  });
+    cfg,
+    "MTN OAuth token request"
+  );
   logPay("auth token request:", res.status);
   if (!res.ok) {
-    throw new MtnApiError(`MTN token request failed (${res.status})`, res.status, await res.text());
+    const body = await res.text();
+    throw new MtnApiError(`MTN token request failed (${res.status})`, res.status, body, isTransientStatus(res.status));
   }
 
   const data = (await res.json()) as { access_token: string; expires_in?: number };
+  if (typeof data?.access_token !== "string" || data.access_token.length === 0) {
+    throw new MtnApiError("MTN token response contained no access_token", res.status, "", true);
+  }
   logPay("auth token obtained");
-  // Default 1 hour; expire slightly early so concurrent calls re-fetch safely.
-  const expiresIn = (data.expires_in || 3600) * 1000;
-  accessTokenCache = { token: data.access_token, expiresAt: Date.now() + expiresIn };
+  // Default 1 hour when MTN omits expires_in; expire slightly early.
+  const expiresIn = (Number(data.expires_in) || 3600) * 1000;
+  cachedToken = { token: data.access_token, expiresAt: Date.now() + expiresIn };
   return data.access_token;
 }
 
-async function apiFetch(path: string, init: RequestInit = {}) {
+function isTransientStatus(status: number): boolean {
+  return status === 408 || status === 429 || status >= 500;
+}
+
+/**
+ * fetch() with a hard deadline.
+ *
+ * Without this a slow or blackholed MTN endpoint leaves the request pending
+ * indefinitely, which pins a server action open and starves every other
+ * supporter behind it. Timeouts and network faults are normalised into
+ * MtnApiError so callers only ever have to handle one error type.
+ */
+async function timedFetch(url: string, init: RequestInit, cfg: MtnConfig, label: string): Promise<Response> {
+  try {
+    return await fetch(url, { ...init, signal: AbortSignal.timeout(cfg.timeoutMs) });
+  } catch (err) {
+    const isTimeout = err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError");
+    if (isTimeout) {
+      throw new MtnApiError(`${label} timed out after ${cfg.timeoutMs}ms`, 504, "", true);
+    }
+    // Connection refused / DNS failure / TLS error.
+    const detail = err instanceof Error ? err.message : "network error";
+    throw new MtnApiError(`${label} could not reach MTN (${detail})`, 0, "", true);
+  }
+}
+
+/**
+ * Authenticated MTN call.
+ *
+ * A 401 means the cached token was rejected (revoked, or the sandbox/prod
+ * credentials rotated underneath us). Rather than failing every payment until
+ * the cache drains, drop the token, re-authenticate once, and replay the call.
+ * `attempt` bounds this to a single retry so a genuinely unauthorised
+ * credential cannot loop.
+ */
+async function apiFetch(path: string, init: RequestInit = {}, attempt = 0): Promise<unknown> {
   const cfg = mtnConfig();
   const token = await getAccessToken();
   const headers = new Headers(init.headers || {});
@@ -164,14 +293,46 @@ async function apiFetch(path: string, init: RequestInit = {}) {
   headers.set("Ocp-Apim-Subscription-Key", cfg.primaryKey);
   if (init.body) headers.set("Content-Type", "application/json");
 
-  const res = await fetch(`${cfg.baseUrl}${path}`, { ...init, headers, cache: "no-store" });
+  const res = await timedFetch(`${cfg.baseUrl}${path}`, { ...init, headers, cache: "no-store" }, cfg, `MTN ${init.method || "GET"} ${path}`);
+
+  if (res.status === 401 && attempt === 0) {
+    logPay("provider call rejected token (401) — re-authenticating and retrying once:", path);
+    invalidateTokenCache();
+    return apiFetch(path, init, attempt + 1);
+  }
+
   logPay("provider call:", init.method || "GET", path, "->", res.status);
   if (!res.ok) {
     const body = await res.text();
-    throw new MtnApiError(`MTN API error on ${path} (${res.status})`, res.status, body);
+    throw new MtnApiError(`MTN API error on ${path} (${res.status})`, res.status, body, isTransientStatus(res.status));
   }
   const text = await res.text();
-  return text ? JSON.parse(text) : null;
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    // A 200 carrying HTML or an empty body (sandbox proxies and captive-portal
+    // interstitials do this) is not a usable response. Without this guard the
+    // value flowed into a typed accessor and crashed on the first property read.
+    throw new MtnApiError(
+      `MTN ${init.method || "GET"} ${path} returned a non-JSON body`,
+      502,
+      text.slice(0, 200),
+      true
+    );
+  }
+}
+
+/**
+ * Assert that a provider response is a JSON object before it is handed back as a
+ * typed result. MTN sometimes answers 200 with an empty body; casting that to
+ * `TransactionStatus` yielded null and crashed callers on first property access.
+ */
+function requireObject<T>(value: unknown, label: string): T {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new MtnApiError(`MTN ${label} returned an unexpected empty response`, 502, "", true);
+  }
+  return value as T;
 }
 
 // --- Collection operations ---
@@ -179,6 +340,16 @@ async function apiFetch(path: string, init: RequestInit = {}) {
 /** Currency to put on the wire: sandbox accepts only EUR; prod uses MTN_CURRENCY. */
 function wireCurrency(cfg: MtnConfig): string {
   return cfg.mode === "sandbox" ? "EUR" : cfg.currency;
+}
+
+/**
+ * The `payee` block. Only sent when MTN_PAYEE_MSISDN is configured — otherwise
+ * MTN falls back to the payee bound to the API user in the portal, which is the
+ * correct default and keeps sandbox working with an empty value.
+ */
+function payeeBlock(cfg: MtnConfig): Record<string, unknown> {
+  if (!cfg.payeeMsisdn) return {};
+  return { payee: { partyIdType: "MSISDN", partyId: normalizeMsisdn(cfg.payeeMsisdn) } };
 }
 
 export type RequestToPayInput = {
@@ -197,12 +368,14 @@ export async function requestToPay(
   input: RequestToPayInput,
   referenceId: string = crypto.randomUUID()
 ): Promise<{ referenceId: string }> {
+  assertUuid(referenceId, "X-Reference-Id");
   const cfg = mtnConfig();
   const body: Record<string, unknown> = {
     amount: toMtnMajor(input.amountMinor),
     currency: wireCurrency(cfg),
     externalId: input.externalId,
     payer: { partyIdType: "MSISDN", partyId: normalizeMsisdn(input.payerMsisdn) },
+    ...payeeBlock(cfg),
     payerMessage: input.payerMessage || "Contribution via Kivaro",
     payeeNote: input.payeeNote || "Kivaro contribution",
   };
@@ -228,7 +401,11 @@ export type TransactionStatus = {
 };
 
 export async function getTransactionStatus(referenceId: string): Promise<TransactionStatus> {
-  return apiFetch(`/collection/v1_0/requesttopay/${referenceId}`);
+  assertUuid(referenceId, "referenceId");
+  return requireObject<TransactionStatus>(
+    await apiFetch(`/collection/v1_0/requesttopay/${referenceId}`),
+    "transaction status"
+  );
 }
 
 export type CreatePreApprovalInput = {
@@ -249,9 +426,11 @@ export async function createPreApproval(
   input: CreatePreApprovalInput,
   preApprovalId: string = crypto.randomUUID()
 ): Promise<{ preApprovalId: string }> {
+  assertUuid(preApprovalId, "X-Reference-Id");
   const cfg = mtnConfig();
   const body: Record<string, unknown> = {
     payer: { partyIdType: "MSISDN", partyId: normalizeMsisdn(input.payerMsisdn) },
+    ...payeeBlock(cfg),
     payerMessage: input.payerMessage || "Authorize recurring contributions via Kivaro",
     payeeNote: input.payeeNote || "Recurring contributions",
     amount: toMtnMajor(input.amountMinor),
@@ -280,7 +459,11 @@ export type PreApprovalStatus = {
 };
 
 export async function getPreApprovalStatus(preApprovalId: string): Promise<PreApprovalStatus> {
-  return apiFetch(`/collection/v1_0/preapproval/${preApprovalId}`);
+  assertUuid(preApprovalId, "preApprovalId");
+  return requireObject<PreApprovalStatus>(
+    await apiFetch(`/collection/v1_0/preapproval/${preApprovalId}`),
+    "pre-approval status"
+  );
 }
 
 /**
@@ -291,6 +474,7 @@ export async function requestToPayAgainstPreApproval(
   preApprovalId: string,
   input: RequestToPayInput
 ): Promise<{ referenceId: string }> {
+  assertUuid(preApprovalId, "preApprovalId");
   const cfg = mtnConfig();
   const referenceId = crypto.randomUUID();
   const body: Record<string, unknown> = {
@@ -298,6 +482,7 @@ export async function requestToPayAgainstPreApproval(
     currency: wireCurrency(cfg),
     externalId: input.externalId,
     payer: { partyIdType: "MSISDN", partyId: normalizeMsisdn(input.payerMsisdn) },
+    ...payeeBlock(cfg),
     payerMessage: input.payerMessage || "Recurring contribution via Kivaro",
     payeeNote: input.payeeNote || "Recurring contribution",
   };
@@ -314,6 +499,7 @@ export async function requestToPayAgainstPreApproval(
 
 /** Revoke a payer's pre-approval (cancellation). Best effort — DB mirror always runs. */
 export async function deletePreApproval(preApprovalId: string): Promise<void> {
+  assertUuid(preApprovalId, "preApprovalId");
   await apiFetch(`/collection/v1_0/preapproval/${preApprovalId}`, { method: "DELETE" });
 }
 

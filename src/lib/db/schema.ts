@@ -84,7 +84,10 @@ export const paymentLinks = pgTable(
   },
   (table) => [
     index('payment_links_org_idx').on(table.organizationId),
-    index('payment_links_org_slug_idx').on(table.organizationId, table.slug),
+    // UNIQUE, not just indexed: a payment link's slug is its public URL
+    // (/give/<org>/link/<slug>). Two links sharing a slug made that route
+    // resolve arbitrarily via findFirst, silently mixing two payment configs.
+    uniqueIndex('payment_links_org_slug_uidx').on(table.organizationId, table.slug),
   ],
 );
 
@@ -141,6 +144,12 @@ export const payments = pgTable(
     paymentMethod: text('payment_method'),
     isRecurring: boolean('is_recurring').default(false),
     mtnTransactionId: text('mtn_transaction_id'),
+    // Client-supplied idempotency key (UUID) for one-time checkouts. A supporter
+    // whose request times out and who retries MUST NOT be charged twice: the
+    // retry replays this same key, we find the existing row, and we return the
+    // original MTN reference instead of issuing a second charge. NULL on rows
+    // created before this existed and on cron-generated recurring debits.
+    idempotencyKey: text('idempotency_key'),
     metadata: jsonb('metadata'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
@@ -149,6 +158,8 @@ export const payments = pgTable(
     index('payments_org_created_idx').on(table.organizationId, table.createdAt),
     index('payments_supporter_idx').on(table.supporterId),
     index('payments_reference_idx').on(table.reference),
+    // Postgres treats NULLs as distinct, so legacy/cron rows are unaffected.
+    uniqueIndex('payments_idempotency_key_uidx').on(table.idempotencyKey),
   ],
 );
 
