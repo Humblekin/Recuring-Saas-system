@@ -116,8 +116,10 @@ export async function updatePaymentLink(id: string, input: UpdatePaymentLinkInpu
     const name = cleanText(input.name, MAX_NAME);
     if (!name) throw new Error("Payment link name is required.");
     set.name = name;
-    const slug = makeSlug(name);
-    if (slug) set.slug = slug;
+    // The slug is deliberately NOT re-derived here. It is the public
+    // /give/<org>/link/<slug> address, so renaming a link must not invalidate
+    // URLs already shared, printed, or encoded in a QR code. The slug stays
+    // whatever it was at creation.
   }
   if (input.description != null) {
     set.description = cleanMultiline(input.description) || null;
@@ -133,6 +135,18 @@ export async function updatePaymentLink(id: string, input: UpdatePaymentLinkInpu
     set.frequencies = input.frequencies.filter((f) =>
       (RECURRING_FREQUENCIES as readonly string[]).includes(f)
     );
+  }
+
+  // Same invariants createPaymentLink enforces, evaluated against the merged
+  // result so a partial update cannot produce an unusable giving page.
+  const nextOneTime = set.oneTimeEnabled ?? existing.oneTimeEnabled;
+  const nextRecurring = set.recurringEnabled ?? existing.recurringEnabled;
+  const nextFrequencies = set.frequencies ?? existing.frequencies ?? [];
+  if (!nextOneTime && !nextRecurring) {
+    throw new Error("Enable one-time or recurring payments (at least one).");
+  }
+  if (nextRecurring && nextFrequencies.length === 0) {
+    throw new Error("Pick at least one recurring frequency.");
   }
 
   try {

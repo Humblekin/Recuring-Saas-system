@@ -3,7 +3,7 @@
 import { db } from "@/lib/db";
 import { subscriptions } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { requireOrgContext } from "@/lib/auth/org";
+import { requireOrgContext, assertRole } from "@/lib/auth/org";
 import { revalidatePath } from "next/cache";
 import { deletePreApproval } from "@/lib/mtn";
 import { createNotification } from "@/lib/notifications";
@@ -19,7 +19,13 @@ import { createNotification } from "@/lib/notifications";
  * marked canceled so the support dashboard stays truthful.
  */
 export async function cancelRecurringSubscription(subscriptionId: string) {
-  const { organization } = await requireOrgContext();
+  const ctx = await requireOrgContext();
+  const { organization } = ctx;
+
+  // Cancelling stops real money movement, so it is owner-only. The dashboard
+  // hides the button from non-owners, but that is a view-layer check and this
+  // action is directly callable — enforce the role here too.
+  assertRole(ctx, ["owner"]);
 
   const subscription = await db.query.subscriptions.findFirst({
     where: eq(subscriptions.id, subscriptionId),

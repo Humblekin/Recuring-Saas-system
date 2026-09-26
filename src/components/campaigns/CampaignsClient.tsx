@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { toggleCampaign, deleteCampaign } from "@/app/actions/campaigns";
 import { ShareModal } from "@/components/share/ShareModal";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { ShareIcon, PauseIcon, TrashIcon, CheckIcon } from "@/components/ui/icons";
+import { ShareIcon, PauseIcon, TrashIcon, CheckIcon, EditIcon } from "@/components/ui/icons";
 import { formatCurrencyFromMinor, errorMessage } from "@/lib/utils";
 
 type CampaignRow = {
@@ -89,6 +89,14 @@ export function CampaignsClient({
                     >
                       <ShareIcon size={15} />
                     </button>
+                    <a
+                      href={`/dashboard/campaigns/${campaign.id}/edit`}
+                      className="w-8 h-8 rounded-lg border border-border hover:bg-cream transition-colors flex items-center justify-center text-ink"
+                      title="Edit"
+                      aria-label={`Edit ${campaign.title}`}
+                    >
+                      <EditIcon size={15} />
+                    </a>
                     <button
                       onClick={() => run(campaign.id, () => toggleCampaign(campaign.id))}
                       disabled={busyId === campaign.id}

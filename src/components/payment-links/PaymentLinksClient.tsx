@@ -6,7 +6,7 @@ import { togglePaymentLink, deletePaymentLink } from "@/app/actions/payment-link
 import { ShareModal } from "@/components/share/ShareModal";
 import { CopyButton } from "@/components/ui/CopyButton";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { ShareIcon, PauseIcon, TrashIcon, CheckIcon } from "@/components/ui/icons";
+import { ShareIcon, PauseIcon, TrashIcon, CheckIcon, EditIcon } from "@/components/ui/icons";
 import { formatCurrencyFromMinor, errorMessage } from "@/lib/utils";
 
 type LinkRow = {
@@ -92,6 +92,14 @@ export function PaymentLinksClient({
                   >
                     <ShareIcon size={16} />
                   </button>
+                  <a
+                    href={`/dashboard/payment-links/${link.id}/edit`}
+                    className="w-9 h-9 rounded-xl border border-border hover:bg-cream transition-colors flex items-center justify-center text-ink"
+                    aria-label={`Edit ${link.name}`}
+                    title="Edit"
+                  >
+                    <EditIcon size={16} />
+                  </a>
                   <button
                     onClick={() => run(link.id, () => togglePaymentLink(link.id))}
                     disabled={busyId === link.id}
