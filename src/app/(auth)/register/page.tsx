@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signUp, signIn, useSession, isGoogleSignInEnabled, isEmailNotVerifiedError } from "@/lib/auth/client";
 import { VerifyEmailStep } from "@/components/auth/VerifyEmailStep";
+import { AuthShell } from "@/components/auth/AuthShell";
 
 export default function RegisterPage({
   searchParams,
@@ -120,9 +121,9 @@ export default function RegisterPage({
   }
 
   return (
-    <div>
+    <AuthShell>
       {/* Mobile Logo */}
-      <div className="lg:hidden mb-8">
+      <div className="lg:hidden mb-6 sm:mb-8">
         <Link href="/" className="flex items-center gap-2.5 text-ink no-underline">
           <span
             className="w-8 h-8 rounded-md bg-terracotta flex items-center justify-center shrink-0"
@@ -138,11 +139,11 @@ export default function RegisterPage({
         </Link>
       </div>
 
-      <div className="mb-8">
+      <div className="mb-7 sm:mb-8">
         <h2 className="text-2xl mb-2" style={{ fontFamily: "var(--font-display)" }}>
           {invite ? "Join your team" : "Create your organization"}
         </h2>
-        <p className="text-ink-muted">
+        <p className="text-[15px] leading-relaxed text-ink-muted">
           {isAuthenticated
             ? invite
               ? "You were invited to an organization on Kivaro. Accept the invite to join your team."
@@ -154,7 +155,7 @@ export default function RegisterPage({
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/25 rounded-xl text-red-300 text-sm">
+        <div className="mb-5 sm:mb-6 p-3.5 sm:p-4 bg-red-500/10 border border-red-500/25 rounded-xl text-error text-sm leading-relaxed">
           {error}
         </div>
       )}
@@ -188,7 +189,7 @@ export default function RegisterPage({
             type="button"
             onClick={handleGoogle}
             disabled={googleLoading}
-            className="w-full py-3 rounded-xl border border-border bg-surface hover:bg-cream transition-colors font-medium text-sm flex items-center justify-center gap-3 disabled:opacity-50"
+            className="w-full min-h-[48px] px-4 py-3 rounded-xl border border-border bg-surface text-[15px] sm:text-sm font-medium flex items-center justify-center gap-3 text-ink transition-[background-color,border-color,box-shadow,transform] duration-200 ease-out-expo hover:bg-cream hover:border-border-light active:scale-[0.99] focus-visible:outline-none focus-visible:border-terracotta focus-visible:ring-4 focus-visible:ring-terracotta/12 disabled:opacity-50"
           >
             <svg width="18" height="18" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M23.5 12.27c0-.79-.07-1.54-.2-2.27H12v4.51h6.46c-.28 1.48-1.12 2.73-2.39 3.58v2.97h3.87c2.26-2.09 3.56-5.17 3.56-8.79z"/>
@@ -199,7 +200,7 @@ export default function RegisterPage({
             {googleLoading ? "Redirecting..." : "Continue with Google"}
           </button>
 
-          <div className="flex items-center gap-4 my-6">
+          <div className="flex items-center gap-3 sm:gap-4 my-5 sm:my-6">
             <div className="flex-1 h-px bg-border"></div>
             <span className="text-xs text-ink-muted uppercase tracking-wider">or</span>
             <div className="flex-1 h-px bg-border"></div>
@@ -207,7 +208,7 @@ export default function RegisterPage({
         </>
       )}
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4 sm:gap-5">
         {!invite && (
           <div>
             <label htmlFor="register-org" className="block text-sm font-medium mb-1.5">
@@ -220,12 +221,12 @@ export default function RegisterPage({
               value={orgName}
               onChange={(e) => setOrgName(e.target.value)}
               placeholder="e.g. HopeWorks Ghana"
-              className="w-full p-3 rounded-xl border border-border bg-surface focus:outline-none focus:border-ink focus:ring-1 focus:ring-ink transition-all text-sm"
+              className="w-full rounded-xl border border-border bg-surface px-3.5 py-3 text-base sm:text-sm text-ink placeholder:text-ink-muted/60 outline-none transition-[border-color,box-shadow] duration-200 ease-out-expo focus:border-terracotta focus:ring-4 focus:ring-terracotta/12"
             />
             {orgName && (
-              <p className="text-xs text-ink-muted mt-1.5 font-mono">
-                kivaro.app/give/{generateSlug(orgName)}
-              </p>
+              <span className="mt-2 inline-flex max-w-full items-center rounded-lg border border-border-light bg-cream-dark px-2 py-1 font-mono text-[11px] text-ink-muted">
+                <span className="truncate">kivaro.app/give/{generateSlug(orgName)}</span>
+              </span>
             )}
           </div>
         )}
@@ -244,7 +245,7 @@ export default function RegisterPage({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@organization.com"
-                className="w-full p-3 rounded-xl border border-border bg-surface focus:outline-none focus:border-ink focus:ring-1 focus:ring-ink transition-all text-sm"
+                className="w-full rounded-xl border border-border bg-surface px-3.5 py-3 text-base sm:text-sm text-ink placeholder:text-ink-muted/60 outline-none transition-[border-color,box-shadow] duration-200 ease-out-expo focus:border-terracotta focus:ring-4 focus:ring-terracotta/12"
               />
             </div>
 
@@ -261,7 +262,7 @@ export default function RegisterPage({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="At least 8 characters"
-                className="w-full p-3 rounded-xl border border-border bg-surface focus:outline-none focus:border-ink focus:ring-1 focus:ring-ink transition-all text-sm"
+                className="w-full rounded-xl border border-border bg-surface px-3.5 py-3 text-base sm:text-sm text-ink placeholder:text-ink-muted/60 outline-none transition-[border-color,box-shadow] duration-200 ease-out-expo focus:border-terracotta focus:ring-4 focus:ring-terracotta/12"
               />
             </div>
           </>
@@ -270,7 +271,7 @@ export default function RegisterPage({
         <button
           type="submit"
           disabled={loading}
-          className="btn-primary w-full py-3 text-base mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="btn-primary w-full py-3 text-base mt-1 sm:mt-2 transition-[transform,background-color,box-shadow] duration-200 ease-out-expo active:scale-[0.985] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2">
@@ -284,15 +285,18 @@ export default function RegisterPage({
       </form>
 
       {!isAuthenticated && (
-        <p className="text-center text-sm text-ink-muted mt-8">
+        <p className="text-center text-sm text-ink-muted mt-7 sm:mt-8">
           Already have an account?{" "}
-          <Link href="/login" className="text-terracotta font-medium hover:underline">
+          <Link
+            href="/login"
+            className="text-terracotta font-medium transition-colors duration-200 ease-out-expo hover:text-terracotta-dark"
+          >
             Sign in
           </Link>
         </p>
       )}
         </>
       )}
-    </div>
+    </AuthShell>
   );
 }

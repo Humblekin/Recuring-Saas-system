@@ -77,10 +77,6 @@ export default function AuthLayout({
 
       {/* Right — Form Panel */}
       <div className="flex items-center justify-center p-6 sm:p-12 bg-cream relative overflow-hidden">
-        <div
-          className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-terracotta/10 blur-3xl animate-glow pointer-events-none"
-          style={{ animationDelay: "-2s" }}
-        ></div>
         <div className="absolute top-6 right-6">
           <ThemeToggle />
         </div>
