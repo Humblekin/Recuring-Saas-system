@@ -138,6 +138,18 @@
     letter-spacing: -0.01em;
   }
 
+  /* Anchored sections must clear the fixed navbar when jumped to directly.
+     The navbar is ~72px tall, so 5rem gives a comfortable breathing room. */
+  section[id] {
+    scroll-margin-top: 5rem;
+  }
+
+  /* Kill the grey flash on iOS/Safari and Android when tapping links/buttons */
+  a,
+  button {
+    -webkit-tap-highlight-color: transparent;
+  }
+
   /* --- Selection --- */
   ::selection {
     background-color: var(--color-terracotta);

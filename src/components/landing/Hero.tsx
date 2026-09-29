@@ -158,13 +158,16 @@ export default function Hero() {
 
           {/* ============ LEFT — Recurring payments headline + copy ============ */}
           <div className="lg:col-span-4 relative z-20 flex flex-col gap-7 lg:gap-8 lg:py-8">
-            {/* Eyebrow */}
-            <div className="flex items-center gap-2.5">
-              <span className="w-8 h-8 rounded-full bg-gold/12 flex items-center justify-center">
+            {/* Eyebrow — truncates to just the MoMo claim on the smallest
+                screens (the full phrase is longer than a 360px viewport can
+                hold without an awkward mid-word wrap). */}
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="w-8 h-8 rounded-full bg-gold/12 flex items-center justify-center shrink-0">
                 <MomoBolt className="text-gold" size={15} />
               </span>
-              <span className="font-mono text-[11px] tracking-[0.14em] uppercase text-ink-light">
-                Recurring payments · Mobile Money powered
+              <span className="font-mono text-[10px] xs:text-[11px] tracking-[0.12em] xs:tracking-[0.14em] uppercase text-ink-light leading-snug min-w-0">
+                <span className="hidden sm:inline">Recurring payments · </span>
+                Mobile Money powered
               </span>
             </div>
 

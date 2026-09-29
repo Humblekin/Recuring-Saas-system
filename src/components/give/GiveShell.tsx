@@ -47,7 +47,7 @@ export function GiveShell({
 
   return (
     <div className="min-h-screen bg-surface flex flex-col">
-      <header className="h-16 border-b border-border bg-surface flex items-center px-6 shrink-0">
+      <header className="h-16 border-b border-border bg-surface flex items-center px-4 sm:px-6 shrink-0">
         <Link href="/" className="flex items-center gap-2 text-ink no-underline">
           <div className="w-7 h-7 bg-ink rounded-md flex items-center justify-center text-cream">
             <LogoMark size={14} />
@@ -58,11 +58,11 @@ export function GiveShell({
         </Link>
       </header>
 
-      <main className="flex-1 flex items-start justify-center p-6">
-        <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-10">
+      <main className="flex-1 flex items-start justify-center p-4 sm:p-6">
+        <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10">
           <div>
             <div
-              className="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-xl font-semibold mb-6"
+              className="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-xl font-semibold mb-5 md:mb-6"
               style={{ backgroundColor: accent }}
             >
               {org.name.charAt(0).toUpperCase()}
@@ -73,7 +73,7 @@ export function GiveShell({
               </span>
             )}
             <h1
-              className="text-3xl md:text-4xl font-medium leading-tight mb-4 text-ink"
+              className="text-3xl md:text-4xl font-medium leading-tight mb-3 md:mb-4 text-ink"
               style={{ fontFamily: "var(--font-display)" }}
             >
               {title}
